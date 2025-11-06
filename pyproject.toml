@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "brainsait-ai"
+version = "0.1.0"
+description = "Automated discovery, digital maturity analysis, and AI outreach for BrainSAIT"
+readme = "README.md"
+authors = [{ name = "BrainSAIT", email = "hello@brainsait.com" }]
+license = { text = "Proprietary" }
+requires-python = ">=3.11"
+dependencies = [
+    "googlemaps>=4.10.0",
+    "requests>=2.32.3",
+    "tenacity>=8.2.3",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.1.0",
+    "beautifulsoup4>=4.12.3",
+    "readability-lxml>=0.8.1",
+    "trafilatura>=1.7.0",
+    "langdetect>=1.0.9",
+    "pandas>=2.2.2",
+    "pyarrow>=16.1.0",
+    "jinja2>=3.1.4",
+    "openai>=1.40.0",
+    "typer[all]>=0.12.3",
+    "rich>=13.7.1",
+    "httpx>=0.27.0",
+    "python-dotenv>=1.0.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.4",
+    "pytest-mock>=3.12.0",
+    "responses>=0.25.0",
+    "freezegun>=1.5.1",
+    "coverage>=7.4.4",
+    "ruff>=0.6.2"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "UP", "B", "ANN", "C4"]
+ignore = ["ANN101", "ANN102"]
