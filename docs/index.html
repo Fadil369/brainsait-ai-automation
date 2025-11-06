@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BrainSAIT AI-Powered Business Discovery System - Discover, Analyze, and Generate Tailored Offers for Saudi Businesses">
+    <meta name="keywords" content="BrainSAIT, AI, Business Discovery, Digital Maturity, Saudi Arabia, Google Places API">
+    <title>BrainSAIT AI Business Discovery System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #00a86b;
+            --dark-bg: #1a1a2e;
+            --light-bg: #f8f9fa;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background: var(--light-bg);
+        }
+
+        /* Header & Navigation */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--dark-bg), #16213e);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #bdc3c7;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 2rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--primary-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Features Section */
+        .section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--text-dark);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        /* Architecture Section */
+        .architecture {
+            background: white;
+            padding: 4rem 2rem;
+        }
+
+        .architecture-diagram {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--light-bg);
+            padding: 2rem;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+
+        .architecture-diagram pre {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre;
+        }
+
+        /* Quick Start Section */
+        .quick-start {
+            background: var(--dark-bg);
+            color: white;
+            padding: 4rem 2rem;
+        }
+
+        .quick-start h2 {
+            color: white;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            padding: 1.5rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .code-block code {
+            color: #7bed9f;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark-bg);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: #7bed9f;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Bilingual Support Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0.25rem;
+        }
+
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning-color);
+            color: var(--dark-bg);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                🧠 BrainSAIT
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#quick-start">Quick Start</a></li>
+                <li><a href="https://github.com/Fadil369/brainsait-ai-automation">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>🚀 AI-Powered Business Discovery System</h1>
+            <p>
+                Discover, analyze, and generate tailored offers for Saudi businesses using Google Maps Platform, 
+                AI-powered digital maturity scoring, and bilingual outreach campaigns.
+            </p>
+            <div>
+                <span class="badge badge-success">🌍 Arabic/English</span>
+                <span class="badge badge-warning">🇸🇦 Saudi Market</span>
+            </div>
+            <div class="cta-buttons" style="margin-top: 2rem;">
+                <a href="https://github.com/Fadil369/brainsait-ai-automation" class="btn btn-primary">View on GitHub</a>
+                <a href="#quick-start" class="btn btn-secondary">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <h2>✨ Key Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>AI-Powered Discovery</h3>
+                <p>Automated business discovery using Google Places API with intelligent filtering and duplicate detection.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Digital Maturity Analysis</h3>
+                <p>Comprehensive scoring across technical, SEO, content, and trust dimensions with AI-powered insights.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>Intelligent Offer Generation</h3>
+                <p>AI-generated tailored service packages with dynamic pricing and bilingual outreach messages.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Dynamic Pricing</h3>
+                <p>Industry-specific pricing with 3-tier service structure (Basic, Professional, Enterprise).</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌍</div>
+                <h3>Bilingual Support</h3>
+                <p>Complete Arabic/English support optimized for the Saudi Arabian market.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Scalable Pipeline</h3>
+                <p>Batch processing with configurable parameters and comprehensive error handling.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats section">
+        <div class="stat-card">
+            <div class="stat-number">100+</div>
+            <div class="stat-label">Businesses per Scan</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">4</div>
+            <div class="stat-label">Maturity Dimensions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Service Tiers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">38</div>
+            <div class="stat-label">Test Suite Coverage</div>
+        </div>
+    </section>
+
+    <section id="architecture" class="architecture">
+        <div class="section">
+            <h2>🏗️ Architecture</h2>
+            <div class="architecture-diagram">
+                <pre>
+┌─────────────────────────────────────────────────────────────┐
+│                    BrainSAIT AI Pipeline                     │
+└─────────────────────────────────────────────────────────────┘
+
+    ┌──────────────┐
+    │ Google Places│──► Business Discovery
+    │     API      │    (Location-based search)
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │ Web Crawler  │──► Content Analysis
+    │ (robots.txt) │    (Language detection)
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │   Feature    │──► Data Extraction
+    │ Engineering  │    (Normalization)
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │   Digital    │──► Maturity Scoring
+    │   Maturity   │    (Technical/SEO/Content/Trust)
+    │   Scorer     │
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │    Offer     │──► Package Selection
+    │  Generator   │    (Dynamic Pricing)
+    └──────┬───────┘
+           │
+           ▼
+    ┌──────────────┐
+    │   Storage    │──► JSON/JSONL Output
+    │ Persistence  │    (Timestamped Results)
+    └──────────────┘
+                </pre>
+            </div>
+        </div>
+    </section>
+
+    <section id="quick-start" class="quick-start">
+        <div class="section">
+            <h2>🚀 Quick Start</h2>
+            
+            <h3 style="margin-top: 2rem;">Installation</h3>
+            <div class="code-block">
+                <code># Clone the repository
+git clone https://github.com/Fadil369/brainsait-ai-automation.git
+cd brainsait_ai_automation
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -e .
+
+# Setup environment variables
+cp .env.example .env
+# Edit .env with your API keys</code>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Basic Usage</h3>
+            <div class="code-block">
+                <code># Discover restaurants in Riyadh
+brainsait-discover restaurant clinic
+
+# Custom location and radius
+brainsait-discover restaurant hospital \
+  --location "21.3891,39.8579" \
+  --radius 30000
+
+# Analyze existing business data
+brainsait-discover analyze business_data.json
+
+# Generate offers for analyzed businesses
+brainsait-discover offers analysis_results.json</code>
+            </div>
+
+            <h3 style="margin-top: 2rem;">Service Tiers</h3>
+            <div class="features-grid" style="margin-top: 1rem;">
+                <div class="feature-card">
+                    <h3>Basic Package</h3>
+                    <div class="stat-number" style="font-size: 2rem;">1,500 SAR</div>
+                    <ul style="text-align: left; margin-top: 1rem; line-height: 2;">
+                        <li>Google My Business optimization</li>
+                        <li>Basic SEO audit</li>
+                        <li>Contact information setup</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Professional Package</h3>
+                    <div class="stat-number" style="font-size: 2rem;">3,500 SAR</div>
+                    <ul style="text-align: left; margin-top: 1rem; line-height: 2;">
+                        <li>Professional website development</li>
+                        <li>Advanced SEO optimization</li>
+                        <li>Social media integration</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>Enterprise Package</h3>
+                    <div class="stat-number" style="font-size: 2rem;">8,000 SAR</div>
+                    <ul style="text-align: left; margin-top: 1rem; line-height: 2;">
+                        <li>Complete digital transformation</li>
+                        <li>E-commerce integration</li>
+                        <li>Custom development solutions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 BrainSAIT. All rights reserved.</p>
+        <div class="footer-links">
+            <a href="https://github.com/Fadil369/brainsait-ai-automation">GitHub</a>
+            <a href="https://github.com/Fadil369/brainsait-ai-automation/blob/main/README.md">Documentation</a>
+            <a href="https://github.com/Fadil369/brainsait-ai-automation/issues">Report Issues</a>
+            <a href="mailto:support@brainsait.com">Contact</a>
+        </div>
+        <p style="margin-top: 1rem; color: #7f8c8d;">
+            Built with ❤️ for the Saudi digital economy
+        </p>
+    </footer>
+</body>
+</html>

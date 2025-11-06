@@ -1,8 +1,14 @@
 # BrainSAIT AI-Powered Business Discovery System
 
+[![License](https://img.shields.io/badge/license-Proprietary-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-brightgreen.svg)](https://python.org)
+[![GitHub Pages](https://img.shields.io/badge/docs-GitHub%20Pages-brightgreen.svg)](https://fadil369.github.io/brainsait-ai-automation/)
+
 ## 🏢 Project Overview
 
 BrainSAIT AI-Powered Business Discovery System is a comprehensive automation platform that discovers businesses using Google Maps Platform, analyzes their digital maturity, and generates tailored outreach campaigns with service packages. Built specifically for the Saudi Arabian market with bilingual support (Arabic/English).
+
+🌐 **[View Documentation Site](https://fadil369.github.io/brainsait-ai-automation/)**
 
 ## ✨ Key Features
 
