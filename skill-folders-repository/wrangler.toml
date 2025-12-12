@@ -1,7 +1,7 @@
 name = "skill-folders-api"
 compatibility_date = "2025-12-12"
 compatibility_flags = ["nodejs_compat"]
-main = "src/index.js"
+main = "dist/index.js"
 workers_dev = true
 
 [env.production]
@@ -21,16 +21,6 @@ id = "skills-kv-namespace"
 
 [build]
 command = "npm run build"
-upload.format = "modules"
-upload.main = "./dist/index.js"
-
-[build.upload]
-format = "modules"
-main = "./dist/index.js"
-
-[site]
-bucket = "./public"
-entry-point = "src"
 
 [triggers]
 crons = ["0 0 * * *"]  # Daily updates
@@ -38,6 +28,6 @@ crons = ["0 0 * * *"]  # Daily updates
 [observability]
 enabled = true
 
-[analytics_engine_datasets]
+[[analytics_engine_datasets]]
 binding = "ANALYTICS"
 dataset = "skills_analytics"
