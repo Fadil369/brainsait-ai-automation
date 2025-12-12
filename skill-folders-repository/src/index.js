@@ -4,6 +4,97 @@ import { logger } from 'hono/logger'
 
 const app = new Hono()
 
+// Tracing utilities
+const generateTraceId = () => crypto.randomUUID()
+const generateSpanId = () => crypto.randomUUID().slice(0, 16)
+
+class Tracer {
+  constructor(c) {
+    this.c = c
+    this.traceId = generateTraceId()
+    this.spans = []
+    this.startTime = Date.now()
+  }
+
+  startSpan(name, attributes = {}) {
+    const span = {
+      spanId: generateSpanId(),
+      traceId: this.traceId,
+      name,
+      startTime: Date.now(),
+      attributes,
+      events: [],
+      status: 'OK'
+    }
+    this.spans.push(span)
+    return span
+  }
+
+  endSpan(span, status = 'OK') {
+    span.endTime = Date.now()
+    span.duration = span.endTime - span.startTime
+    span.status = status
+  }
+
+  addEvent(span, name, attributes = {}) {
+    span.events.push({
+      name,
+      timestamp: Date.now(),
+      attributes
+    })
+  }
+
+  setError(span, error) {
+    span.status = 'ERROR'
+    span.error = {
+      message: error.message,
+      stack: error.stack,
+      type: error.name
+    }
+  }
+
+  // Export trace data for logging/analytics
+  export() {
+    return {
+      traceId: this.traceId,
+      totalDuration: Date.now() - this.startTime,
+      spanCount: this.spans.length,
+      spans: this.spans,
+      metadata: {
+        service: 'skill-folders-api',
+        version: '1.0.0',
+        environment: 'cloudflare-workers'
+      }
+    }
+  }
+
+  // Write to Cloudflare Analytics Engine
+  async writeToAnalytics(env) {
+    if (!env?.ANALYTICS) return
+    
+    try {
+      const trace = this.export()
+      env.ANALYTICS.writeDataPoint({
+        blobs: [
+          this.traceId,
+          this.c.req.path,
+          this.c.req.method,
+          JSON.stringify(trace.spans.map(s => s.name))
+        ],
+        doubles: [
+          trace.totalDuration,
+          trace.spanCount
+        ],
+        indexes: [
+          this.c.get('apiKey')?.slice(0, 8) || 'anonymous'
+        ]
+      })
+    } catch (e) {
+      console.error('Analytics write failed:', e)
+    }
+  }
+}
+
 // Subscription tiers configuration
 const TIERS = {
   starter: { limit: 10000, skills: ['legal-compliance'], price: '$500-1,000/month' },
@@ -67,16 +158,68 @@ const rateLimit = async (c, next) => {
   return next()
 }
 
+// Tracing middleware
+const tracing = async (c, next) => {
+  const tracer = new Tracer(c)
+  c.set('tracer', tracer)
+  
+  // Create root span for the request
+  const rootSpan = tracer.startSpan('http.request', {
+    'http.method': c.req.method,
+    'http.url': c.req.url,
+    'http.path': c.req.path,
+    'http.user_agent': c.req.header('User-Agent') || 'unknown',
+    'client.ip': c.req.header('CF-Connecting-IP') || 'unknown'
+  })
+  c.set('rootSpan', rootSpan)
+  
+  // Add trace ID to response headers
+  c.header('X-Trace-ID', tracer.traceId)
+  c.header('X-Request-Id', tracer.traceId)
+  
+  try {
+    await next()
+    
+    // End root span with response info
+    rootSpan.attributes['http.status_code'] = c.res.status
+    tracer.endSpan(rootSpan, c.res.status >= 400 ? 'ERROR' : 'OK')
+  } catch (error) {
+    tracer.setError(rootSpan, error)
+    tracer.endSpan(rootSpan, 'ERROR')
+    throw error
+  } finally {
+    // Log trace summary
+    const trace = tracer.export()
+    console.log(JSON.stringify({
+      level: 'trace',
+      traceId: trace.traceId,
+      path: c.req.path,
+      method: c.req.method,
+      status: c.res?.status,
+      duration: trace.totalDuration,
+      spans: trace.spans.map(s => ({
+        name: s.name,
+        duration: s.duration,
+        status: s.status
+      }))
+    }))
+    
+    // Write to Analytics Engine (non-blocking)
+    c.executionCtx?.waitUntil(tracer.writeToAnalytics(c.env))
+  }
+}
+
 // Middleware
 app.use('*', logger())
 app.use('*', cors({
   origin: '*', // Allow all origins for API access
   allowHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-API-Key'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-Request-Id'],
+  exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-Request-Id', 'X-Trace-ID'],
   maxAge: 600,
   credentials: true,
 }))
+app.use('*', tracing)  // Add tracing before other middleware
 app.use('*', validateApiKey)
 app.use('*', rateLimit)
 
@@ -107,6 +250,11 @@ app.get('/health', (c) => {
 
 // Skills API
 app.get('/api/skills', async (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('skills.list', {
+    'skills.category_filter': c.req.query('category') || 'all'
+  })
+  
   const category = c.req.query('category')
   const language = c.req.header('Accept-Language') || 'en'
   
@@ -175,6 +323,8 @@ app.get('/api/skills', async (c) => {
   }
 
   if (category && skills[category]) {
+    tracer.addEvent(span, 'category_found', { category, count: skills[category].length })
+    tracer.endSpan(span)
     return c.json({
       category,
       skills: skills[category],
@@ -183,6 +333,8 @@ app.get('/api/skills', async (c) => {
     })
   }
 
+  tracer.addEvent(span, 'all_categories', { count: Object.values(skills).flat().length })
+  tracer.endSpan(span)
   return c.json({
     categories: Object.keys(skills),
     totalSkills: Object.values(skills).flat().length,
@@ -192,7 +344,9 @@ app.get('/api/skills', async (c) => {
 
 // Get specific skill
 app.get('/api/skills/:id', async (c) => {
+  const tracer = c.get('tracer')
   const id = c.req.param('id')
+  const span = tracer.startSpan('skills.get', { 'skills.id': id })
   const language = c.req.header('Accept-Language') || 'en'
   
   // Mock skill data
@@ -222,6 +376,8 @@ app.get('/api/skills/:id', async (c) => {
     ]
   }
 
+  tracer.addEvent(span, 'skill_retrieved', { id, category: skill.category })
+  tracer.endSpan(span)
   return c.json({
     skill,
     language,
@@ -231,6 +387,8 @@ app.get('/api/skills/:id', async (c) => {
 
 // Categories endpoint
 app.get('/api/categories', (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('categories.list')
   const language = c.req.header('Accept-Language') || 'en'
   
   const categories = [
@@ -257,6 +415,8 @@ app.get('/api/categories', (c) => {
     }
   ]
 
+  tracer.addEvent(span, 'categories_retrieved', { count: categories.length })
+  tracer.endSpan(span)
   return c.json({
     categories,
     totalCategories: categories.length,
@@ -269,7 +429,7 @@ app.get('/api/categories', (c) => {
 app.get('/docs', (c) => {
   return c.json({
     documentation: {
-      baseUrl: 'https://skill-folders-api.brainsait.workers.dev',
+      baseUrl: 'https://skill-folders-api.brainsait-fadil.workers.dev',
       authentication: 'Bearer token required for /api/* endpoints',
       rateLimiting: 'Based on subscription tier',
       endpoints: {
@@ -285,6 +445,20 @@ app.get('/docs', (c) => {
       headers: {
         'Authorization': 'Bearer sk_your_api_key (required for /api/* except /api/pricing)',
         'Accept-Language': 'Optional: en or ar (default: en)'
+      },
+      tracing: {
+        enabled: true,
+        description: 'All requests include distributed tracing',
+        responseHeaders: {
+          'X-Trace-ID': 'Unique trace identifier for debugging',
+          'X-Request-Id': 'Same as X-Trace-ID for compatibility'
+        },
+        features: [
+          'Request/response timing',
+          'Span-based operation tracking',
+          'Error capture and propagation',
+          'Analytics Engine integration'
+        ]
       },
       responseFormat: 'JSON with standardized structure',
       getApiKey: 'Contact sales@brainsait.com or visit https://brainsait.com/api-keys'
