@@ -1,4 +1,5 @@
 name = "skill-folders-api"
+account_id = "d7b99530559ab4f2545e9bdc72a7ab9b"
 compatibility_date = "2025-12-12"
 compatibility_flags = ["nodejs_compat"]
 main = "dist/index.js"
@@ -17,7 +18,7 @@ bucket_name = "skills-storage"
 
 [[kv_namespaces]]
 binding = "SKILLS_KV"
-id = "skills-kv-namespace"
+id = "b60f07315ada43d6b4919407842d6662"
 
 [build]
 command = "npm run build"
