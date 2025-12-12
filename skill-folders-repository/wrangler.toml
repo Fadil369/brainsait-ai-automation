@@ -1,0 +1,43 @@
+name = "skill-folders-api"
+compatibility_date = "2025-12-12"
+compatibility_flags = ["nodejs_compat"]
+main = "src/index.js"
+workers_dev = true
+
+[env.production]
+name = "skill-folders-api-prod"
+
+[vars]
+API_VERSION = "1.0.0"
+ENVIRONMENT = "development"
+
+[[r2_buckets]]
+binding = "SKILLS_STORAGE"
+bucket_name = "skills-storage"
+
+[[kv_namespaces]]
+binding = "SKILLS_KV"
+id = "skills-kv-namespace"
+
+[build]
+command = "npm run build"
+upload.format = "modules"
+upload.main = "./dist/index.js"
+
+[build.upload]
+format = "modules"
+main = "./dist/index.js"
+
+[site]
+bucket = "./public"
+entry-point = "src"
+
+[triggers]
+crons = ["0 0 * * *"]  # Daily updates
+
+[observability]
+enabled = true
+
+[analytics_engine_datasets]
+binding = "ANALYTICS"
+dataset = "skills_analytics"
