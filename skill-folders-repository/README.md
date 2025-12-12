@@ -3,33 +3,29 @@
 ## Overview
 This repository contains a comprehensive collection of AI agent skills organized into specialized domains. Each skill folder represents a specific capability that can be integrated into AI agents to enhance their functionality and domain expertise.
 
-## Skill Domains
+## Skill Domains (New Organized Structure)
 
-### 1. Legal Auditor Compliance
+The skills are now organized in domain-specific folders under `/domains/`:
+
+### 1. Legal Compliance (`domains/legal-compliance/`)
 **Purpose**: Legal compliance auditing and regulatory knowledge management
-- Regulatory Knowledge Base
-- Auditing Scripts
-- Compliance Reporting
+- **Skills**: Regulatory Knowledge Base (EU AI Act, GDPR, ISO 27001, PDPL)
+- **Specs**: Complete specification files with test scenarios
+- **Features**: Automated compliance auditing, regulatory interpretation, citation tracking
 
-### 2. Cyber Guardian MDR
-**Purpose**: Cybersecurity threat detection and incident response
-- Threat Analysis
-- Deepfake Detection
-- Incident Response
+### 2. Cybersecurity (`domains/cybersecurity/`)
+**Purpose**: Advanced cybersecurity threat detection and media authentication
+- **Skills**: 
+  - Threat Analysis (<5s response time, MITRE ATT&CK mapping, 24/7 monitoring)
+  - Deepfake Detection (>98% accuracy, video/audio analysis, forensic reports)
+- **Specs**: Detailed operational workflows and integration requirements
+- **Features**: Real-time threat intelligence, anomaly detection, incident response
 
-### 3. Researcher Automation
-**Purpose**: Lead generation and workflow automation
-- Browser Automation
-- API Integration
-
-### 4. Healthcare Insurance (Saudi Market)
-**Purpose**: Specialized skills for Saudi healthcare insurance market
-- Regulatory Compliance (Saudi)
-- Claims Processing Automation
-- Preauthorization Management
-- Customer Service Automation
-- Provider Network Management
-- Data Analytics & Reporting
+### 3. Healthcare (Saudi Market) (`domains/healthcare-saudi/`)
+**Purpose**: Specialized compliance for Saudi healthcare insurance
+- **Skills**: Regulatory Compliance (CCHI/Insurance Authority, MoH, SHC alignment)
+- **Specs**: Saudi-specific regulatory framework with Arabic citations
+- **Features**: Claims processing, policy wording validation, PDPL compliance
 
 ## Implementation Structure
 
@@ -105,10 +101,28 @@ Each skill folder contains:
 
 ## License & Commercial Model
 
-### Commercial Tiers
-1. **Starter Tier**: $500-1,000/month - 3 basic skills + security updates
-2. **Professional Tier**: $2,000-5,000/month - All skills in one domain + technical support
-3. **Enterprise Tier**: $10,000+/month - All skills + customization + dedicated integration
+### Commercial Tiers (Saudi Market Pricing)
+1. **Starter Tier**: SAR 7,500-12,000/month (~$2,000-3,200/month)
+   - 3 foundational skills
+   - 10,000 API calls/month
+   - Email support (Arabic/English)
+   - Legal Compliance domain only
+
+2. **Professional Tier**: SAR 22,500-37,500/month (~$6,000-10,000/month)
+   - All skills in chosen domain
+   - 100,000 API calls/month
+   - Priority support 24/7
+   - Custom configurations + webhooks
+   - Monthly compliance reports
+
+3. **Enterprise Tier**: SAR 75,000+/month (~$20,000+/month)
+   - All skills, all domains
+   - Unlimited API calls
+   - Dedicated support & SLA
+   - Custom skill development
+   - On-premise deployment option
+   - SAMA, NCA, SDAIA compliance
+   - Dedicated account manager
 
 ### Usage Terms
 1. Commercial use requires valid licensing
@@ -116,13 +130,53 @@ Each skill folder contains:
 3. Security vulnerability reporting required
 4. Compliance with local and international laws
 
+## API Access
+
+### Live Endpoints
+- **API Base URL**: https://skill-folders-api.brainsait-fadil.workers.dev
+- **API Documentation**: https://skill-folders-api.brainsait-fadil.workers.dev/docs
+- **Landing Page**: [English](../docs/landing/index.html) | [العربية](../docs/ar/index.html)
+
+### Public Endpoints (No Authentication Required)
+```bash
+# Service info
+curl https://skill-folders-api.brainsait-fadil.workers.dev/
+
+# Health check
+curl https://skill-folders-api.brainsait-fadil.workers.dev/health
+
+# Pricing tiers
+curl https://skill-folders-api.brainsait-fadil.workers.dev/api/pricing
+```
+
+### Protected Endpoints (Authentication Required)
+```bash
+# List all skills
+curl -H "Authorization: Bearer sk_your_api_key" \
+  https://skill-folders-api.brainsait-fadil.workers.dev/api/skills
+
+# Get skill details
+curl -H "Authorization: Bearer sk_your_api_key" \
+  https://skill-folders-api.brainsait-fadil.workers.dev/api/skills/cyber-001
+
+# Filter by category
+curl -H "Authorization: Bearer sk_your_api_key" \
+  "https://skill-folders-api.brainsait-fadil.workers.dev/api/skills?category=healthcare-saudi"
+```
+
 ## Getting Started
 
-1. **Explore Skills**: Review each skill folder's README
-2. **Select Skills**: Choose skills relevant to your needs
-3. **Integration**: Follow integration guides
-4. **Testing**: Use provided test tools
-5. **Deployment**: Deploy to production environment
+### Option 1: API Integration (Recommended)
+1. **Sign Up**: Visit [brainsait.com/trial](https://brainsait.com/trial) for 14-day free trial
+2. **Get API Key**: Obtain your API key from the dashboard
+3. **Integrate**: Use our [tutorials](../docs/ar/tutorials.html) for step-by-step guides
+4. **Deploy**: Start making API calls to access AI skills
+
+### Option 2: On-Premise Deployment (Enterprise)
+1. **Contact Sales**: Email sales@brainsait.com for enterprise licensing
+2. **Deploy Worker**: Self-host using Cloudflare Workers or similar
+3. **Configure**: Set up KV storage and environment variables
+4. **Customize**: Add custom skills for your specific needs
 
 ## Support & Maintenance
 - Weekly updates for laws and regulations

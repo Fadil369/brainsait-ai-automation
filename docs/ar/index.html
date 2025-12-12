@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BrainSAIT Skills API - مهارات الذكاء الاصطناعي للمؤسسات في السوق السعودي">
+    <meta name="keywords" content="API مهارات الذكاء الاصطناعي, السعودية, الامتثال, ساما, الهيئة الوطنية للأمن السيبراني, سدايا">
+    <title>BrainSAIT Skills API - مهارات الذكاء الاصطناعي للسوق السعودي</title>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0047AB;
+            --secondary: #00A86B;
+            --accent: #FFD700;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --success: #28a745;
+            --gradient: linear-gradient(135deg, #0047AB 0%, #00A86B 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif, 'Arial', 'Helvetica';
+            line-height: 1.8;
+            color: var(--text-dark);
+            background: var(--light);
+        }
+
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .cta-button {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 0.7rem 1.5rem;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #16213e 100%);
+            color: white;
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.8;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--dark);
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            padding: 1rem 2.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 2px solid white;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--dark);
+        }
+
+        .stats {
+            background: white;
+            padding: 3rem 2rem;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-item p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .features {
+            padding: 6rem 2rem;
+            background: var(--light);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: var(--dark);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .feature-card p {
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+
+        .tutorials {
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        .tutorial-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .tutorial-card {
+            background: var(--light);
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .tutorial-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .tutorial-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .tutorial-card .duration {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .tutorial-card ul {
+            list-style: none;
+            margin: 1rem 0;
+        }
+
+        .tutorial-card ul li {
+            padding: 0.5rem 0;
+            padding-right: 1.5rem;
+            position: relative;
+        }
+
+        .tutorial-card ul li:before {
+            content: "←";
+            position: absolute;
+            right: 0;
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .tutorial-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.7rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .tutorial-link:hover {
+            background: var(--secondary);
+        }
+
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin: 0.5rem 0;
+        }
+
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        .footer-section a:hover {
+            opacity: 1;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            opacity: 0.7;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .tutorial-grid, .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">🧠 BrainSAIT Skills API</div>
+            <ul class="nav-links">
+                <li><a href="#features">المميزات</a></li>
+                <li><a href="#tutorials">الدروس</a></li>
+                <li><a href="tutorials.html">التعليمات</a></li>
+                <li><a href="guides.html">الأدلة</a></li>
+                <li><a href="../landing/index.html">English</a></li>
+            </ul>
+            <a href="https://brainsait.com/trial" class="cta-button">تجربة مجانية</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="hero-content">
+            <h1>مهارات الذكاء الاصطناعي للمؤسسات السعودية</h1>
+            <p>مهارات متقدمة للذكاء الاصطناعي في الامتثال القانوني والأمن السيبراني والرعاية الصحية - مصممة خصيصاً للسوق السعودي مع الامتثال لـ ساما والهيئة الوطنية للأمن السيبراني وسدايا</p>
+            <div class="hero-buttons">
+                <a href="https://brainsait.com/trial" class="btn-primary">ابدأ تجربة مجانية لمدة 14 يوماً</a>
+                <a href="https://skill-folders-api.brainsait-fadil.workers.dev/docs" class="btn-secondary">وثائق API</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h3>98%</h3>
+                <p>دقة الكشف</p>
+            </div>
+            <div class="stat-item">
+                <h3>&lt;5 ثانية</h3>
+                <p>وقت الاستجابة للتهديدات</p>
+            </div>
+            <div class="stat-item">
+                <h3>15+</h3>
+                <p>مهارة للمؤسسات</p>
+            </div>
+            <div class="stat-item">
+                <h3>99.9%</h3>
+                <p>وقت تشغيل API</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <h2 class="section-title">مجموعة شاملة من مهارات الذكاء الاصطناعي</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚖️</div>
+                <h3>الامتثال القانوني</h3>
+                <p>قاعدة معرفية تنظيمية مع تفسير قانون الاتحاد الأوروبي للذكاء الاصطناعي، GDPR، ISO 27001، ونظام حماية البيانات الشخصية السعودي. تدقيق آلي للامتثال وتقارير مخصصة للأنظمة السعودية.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3>الأمن السيبراني</h3>
+                <p>كشف التهديدات في الوقت الفعلي مع تصنيف MITRE ATT&CK، كشف التزييف العميق (دقة >98%)، ومراقبة أمنية على مدار الساعة متوافقة مع متطلبات الهيئة الوطنية للأمن السيبراني.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🏥</div>
+                <h3>الرعاية الصحية (السعودية)</h3>
+                <p>الامتثال للتأمين الصحي السعودي مع أنظمة مجلس الضمان الصحي/هيئة التأمين، أتمتة معالجة المطالبات، ودعم ثنائي اللغة بالعربية والإنجليزية.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>دعم ثنائي اللغة</h3>
+                <p>دعم اللغة العربية والإنجليزية الأصلي لجميع المهارات، مع التكيف الثقافي للسوق السعودي والأطر التنظيمية الإقليمية.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🚀</div>
+                <h3>سرعة فائقة</h3>
+                <p>أوقات استجابة أقل من 5 ثوانٍ للتهديدات الأمنية الحرجة، كشف التزييف العميق في أقل من 10 ثوانٍ، وتحديثات استخبارات التهديدات في الوقت الفعلي.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>أمان المؤسسات</h3>
+                <p>معتمد ISO 27001، متوافق مع SOC 2 Type II، مع خيارات النشر الداخلي لمتطلبات سيادة البيانات.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="tutorials" class="tutorials">
+        <h2 class="section-title">الدروس التعليمية والأدلة</h2>
+        <div class="tutorial-grid">
+            <div class="tutorial-card">
+                <h3>البدء السريع مع BrainSAIT API</h3>
+                <div class="duration">⏱️ مدة التعلم: 30 دقيقة</div>
+                <p>تعلم أساسيات استخدام BrainSAIT Skills API للمؤسسات السعودية</p>
+                <ul>
+                    <li>إنشاء حساب والحصول على مفتاح API</li>
+                    <li>فهم بنية الاستدعاءات</li>
+                    <li>أمثلة عملية باستخدام cURL</li>
+                    <li>معالجة الأخطاء والاستجابات</li>
+                </ul>
+                <a href="tutorials.html#quickstart" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+
+            <div class="tutorial-card">
+                <h3>تكامل مع GPT Actions</h3>
+                <div class="duration">⏱️ مدة التعلم: 45 دقيقة</div>
+                <p>دليل شامل لربط مهارات BrainSAIT مع OpenAI GPT Custom Actions</p>
+                <ul>
+                    <li>إعداد OpenAPI Schema</li>
+                    <li>تكوين المصادقة</li>
+                    <li>أمثلة تكامل كاملة</li>
+                    <li>اختبار وتصحيح الأخطاء</li>
+                </ul>
+                <a href="tutorials.html#gpt-actions" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+
+            <div class="tutorial-card">
+                <h3>الامتثال للأنظمة السعودية</h3>
+                <div class="duration">⏱️ مدة التعلم: 60 دقيقة</div>
+                <p>فهم متطلبات الامتثال لـ ساما، الهيئة الوطنية للأمن السيبراني، وسدايا</p>
+                <ul>
+                    <li>إطار ساما للأمن السيبراني</li>
+                    <li>الضوابط الأساسية للأمن السيبراني (ECC)</li>
+                    <li>نظام حماية البيانات الشخصية (PDPL)</li>
+                    <li>تطبيق المهارات للامتثال</li>
+                </ul>
+                <a href="guides.html#saudi-compliance" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+
+            <div class="tutorial-card">
+                <h3>كشف التهديدات السيبرانية</h3>
+                <div class="duration">⏱️ مدة التعلم: 50 دقيقة</div>
+                <p>استخدام مهارة تحليل التهديدات للكشف المبكر عن الهجمات السيبرانية</p>
+                <ul>
+                    <li>مراقبة الشبكة في الوقت الفعلي</li>
+                    <li>تحليل السلوك الشاذ</li>
+                    <li>تصنيف MITRE ATT&CK</li>
+                    <li>الاستجابة التلقائية للحوادث</li>
+                </ul>
+                <a href="tutorials.html#threat-detection" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+
+            <div class="tutorial-card">
+                <h3>الامتثال للتأمين الصحي</h3>
+                <div class="duration">⏱️ مدة التعلم: 55 دقيقة</div>
+                <p>دليل للامتثال بأنظمة التأمين الصحي السعودي باستخدام AI</p>
+                <ul>
+                    <li>متطلبات هيئة التأمين السعودية</li>
+                    <li>معالجة المطالبات الآلية</li>
+                    <li>التحقق من الأهلية</li>
+                    <li>التقارير الامتثالية</li>
+                </ul>
+                <a href="guides.html#healthcare-compliance" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+
+            <div class="tutorial-card">
+                <h3>أفضل الممارسات الأمنية</h3>
+                <div class="duration">⏱️ مدة التعلم: 40 دقيقة</div>
+                <p>تأمين تطبيقاتك عند استخدام BrainSAIT API</p>
+                <ul>
+                    <li>إدارة مفاتيح API بشكل آمن</li>
+                    <li>تشفير البيانات أثناء النقل</li>
+                    <li>تسجيل ومراقبة الاستخدام</li>
+                    <li>الامتثال لـ ISO 27001</li>
+                </ul>
+                <a href="guides.html#security-best-practices" class="tutorial-link">ابدأ الدرس ←</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>المنتج</h4>
+                <ul>
+                    <li><a href="#features">المميزات</a></li>
+                    <li><a href="../landing/index.html#pricing">الأسعار</a></li>
+                    <li><a href="https://skill-folders-api.brainsait-fadil.workers.dev/docs">وثائق API</a></li>
+                    <li><a href="https://brainsait.com/trial">تجربة مجانية</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>الشركة</h4>
+                <ul>
+                    <li><a href="https://brainsait.com/about">من نحن</a></li>
+                    <li><a href="https://brainsait.com/contact">تواصل معنا</a></li>
+                    <li><a href="https://brainsait.com/careers">الوظائف</a></li>
+                    <li><a href="https://brainsait.com/blog">المدونة</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>الموارد</h4>
+                <ul>
+                    <li><a href="tutorials.html">الدروس التعليمية</a></li>
+                    <li><a href="guides.html">أدلة الامتثال</a></li>
+                    <li><a href="https://github.com/Fadil369/brainsait-ai-automation">GitHub</a></li>
+                    <li><a href="https://brainsait.com/support">الدعم الفني</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>تواصل معنا</h4>
+                <ul>
+                    <li>📧 sales@brainsait.com</li>
+                    <li>📧 sales.ksa@brainsait.com</li>
+                    <li>📱 واتساب: +966-50-XXX-XXXX</li>
+                    <li>🌐 brainsait.com</li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 BrainSAIT. جميع الحقوق محفوظة. | <a href="https://brainsait.com/privacy">سياسة الخصوصية</a> | <a href="https://brainsait.com/terms">شروط الخدمة</a></p>
+        </div>
+    </footer>
+</body>
+</html>
