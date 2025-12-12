@@ -4,11 +4,26 @@ import { logger } from 'hono/logger'
 
 const app = new Hono()
 
-// Subscription tiers configuration
+// Subscription tiers configuration (Saudi market pricing)
 const TIERS = {
-  starter: { limit: 10000, skills: ['legal-compliance'], price: '$500-1,000/month' },
-  professional: { limit: 100000, skills: ['legal-compliance', 'cybersecurity', 'healthcare-saudi'], price: '$2,000-5,000/month' },
-  enterprise: { limit: Infinity, skills: '*', price: '$10,000+/month' }
+  starter: { 
+    limit: 10000, 
+    skills: ['legal-compliance'], 
+    price: 'SAR 7,500-12,000/month',
+    priceUSD: '$2,000-3,200/month' 
+  },
+  professional: { 
+    limit: 100000, 
+    skills: ['legal-compliance', 'cybersecurity', 'healthcare-saudi'], 
+    price: 'SAR 22,500-37,500/month',
+    priceUSD: '$6,000-10,000/month' 
+  },
+  enterprise: { 
+    limit: Infinity, 
+    skills: '*', 
+    price: 'SAR 75,000+/month',
+    priceUSD: '$20,000+/month' 
+  }
 }
 
 // API Key validation middleware
@@ -292,58 +307,122 @@ app.get('/docs', (c) => {
   })
 })
 
-// Pricing endpoint (public)
+// Pricing endpoint (public) - Saudi Market Focused
 app.get('/api/pricing', (c) => {
+  const language = c.req.header('Accept-Language') || 'en'
+  
   return c.json({
+    market: 'Saudi Arabia (KSA)',
+    currency: 'SAR (Saudi Riyal)',
     tiers: {
       starter: {
-        price: '$500-1,000/month',
-        features: [
-          '3 basic skills access',
+        name: language === 'ar' ? 'باقة البداية' : 'Starter',
+        priceSAR: 'SAR 7,500-12,000/month',
+        priceUSD: '$2,000-3,200/month',
+        features: language === 'ar' ? [
+          'وصول لـ 3 مهارات أساسية',
+          '10,000 استدعاء API شهرياً',
+          'دعم عبر البريد الإلكتروني',
+          'التحديثات الأمنية',
+          'مجال الامتثال القانوني فقط',
+          'واجهة عربية / إنجليزية'
+        ] : [
+          '3 foundational skills access',
           '10,000 API calls/month',
-          'Email support',
+          'Email support (Arabic/English)',
           'Security updates',
-          'Legal Compliance domain only'
+          'Legal Compliance domain only',
+          'Bilingual interface'
         ],
-        bestFor: 'Small teams getting started with AI compliance'
+        bestFor: language === 'ar' 
+          ? 'الشركات الصغيرة والمتوسطة التي تبدأ رحلة الامتثال الرقمي'
+          : 'SMEs starting their digital compliance journey'
       },
       professional: {
-        price: '$2,000-5,000/month',
-        features: [
+        name: language === 'ar' ? 'باقة الأعمال' : 'Professional',
+        priceSAR: 'SAR 22,500-37,500/month',
+        priceUSD: '$6,000-10,000/month',
+        features: language === 'ar' ? [
+          'جميع المهارات في المجال المختار',
+          '100,000 استدعاء API شهرياً',
+          'دعم ذو أولوية (عربي/إنجليزي)',
+          'تكوين مخصص للمهارات',
+          'تكاملات Webhook',
+          'لوحة تحليلات الاستخدام',
+          'تقارير الامتثال الشهرية',
+          'تنبيهات التحديثات التنظيمية'
+        ] : [
           'All skills in chosen domain',
           '100,000 API calls/month',
-          'Priority support',
+          'Priority support (Arabic/English)',
           'Custom skill configuration',
           'Webhook integrations',
-          'Usage analytics dashboard'
+          'Usage analytics dashboard',
+          'Monthly compliance reports',
+          'Regulatory update alerts'
         ],
-        bestFor: 'Growing companies with specific domain needs'
+        bestFor: language === 'ar'
+          ? 'الشركات المتنامية مع احتياجات امتثال متخصصة في السوق السعودي'
+          : 'Growing companies with specialized compliance needs in Saudi market'
       },
       enterprise: {
-        price: '$10,000+/month',
-        features: [
+        name: language === 'ar' ? 'باقة المؤسسات' : 'Enterprise',
+        priceSAR: 'SAR 75,000+/month',
+        priceUSD: '$20,000+/month',
+        features: language === 'ar' ? [
+          'جميع المهارات في جميع المجالات',
+          'استدعاءات API غير محدودة',
+          'دعم مخصص واتفاقية مستوى الخدمة (SLA)',
+          'تطوير مهارات مخصصة حسب الطلب',
+          'خيار النشر الداخلي (On-Premise)',
+          'SSO وأمان متقدم',
+          'دعم ثنائي اللغة (عربي/إنجليزي) 24/7',
+          'تنبيهات تحديثات تنظيمية فورية',
+          'امتثال SAMA، NCA، SDAIA',
+          'استشارات امتثال ربع سنوية',
+          'تكامل مع أنظمة المؤسسة',
+          'مدير حساب مخصص'
+        ] : [
           'All skills, all domains',
           'Unlimited API calls',
           'Dedicated support & SLA',
           'Custom skill development',
           'On-premise deployment option',
           'SSO & advanced security',
-          'Arabic/English bilingual support',
-          'Regulatory update alerts'
+          'Bilingual support (Arabic/English) 24/7',
+          'Real-time regulatory update alerts',
+          'SAMA, NCA, SDAIA compliance',
+          'Quarterly compliance consultations',
+          'Enterprise system integration',
+          'Dedicated account manager'
         ],
-        bestFor: 'Large organizations requiring full compliance coverage'
+        bestFor: language === 'ar'
+          ? 'المؤسسات الكبرى والجهات الحكومية التي تتطلب تغطية امتثال شاملة'
+          : 'Large enterprises and government entities requiring comprehensive compliance coverage'
       }
+    },
+    saudiCompliance: {
+      frameworks: ['SAMA Cybersecurity Framework', 'NCA Essential Cybersecurity Controls (ECC)', 'SDAIA PDPL', 'Saudi Health Council Regulations'],
+      certifications: ['ISO 27001', 'SOC 2 Type II', 'CITC Licensed']
     },
     contact: {
       sales: 'sales@brainsait.com',
+      salesArabic: 'sales.ksa@brainsait.com',
       website: 'https://brainsait.com/pricing',
+      whatsapp: '+966-50-XXX-XXXX',
       demo: 'https://brainsait.com/demo'
     },
     trial: {
       available: true,
-      duration: '14 days',
+      duration: language === 'ar' ? '14 يوماً' : '14 days',
       tier: 'professional',
-      signup: 'https://brainsait.com/trial'
+      signup: 'https://brainsait.com/trial',
+      noCardRequired: true
+    },
+    payment: {
+      methods: ['Bank Transfer', 'Credit Card', 'Invoice (Enterprise only)'],
+      billing: 'Monthly or Annual (15% discount)',
+      currency: 'SAR or USD accepted'
     }
   })
 })
