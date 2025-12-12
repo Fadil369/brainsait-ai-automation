@@ -6,9 +6,72 @@
 
 ## 🏢 Project Overview
 
-BrainSAIT AI-Powered Business Discovery System is a comprehensive automation platform that discovers businesses using Google Maps Platform, analyzes their digital maturity, and generates tailored outreach campaigns with service packages. Built specifically for the Saudi Arabian market with bilingual support (Arabic/English).
+BrainSAIT is a comprehensive AI automation platform with two major components:
+
+1. **Business Discovery System**: Discovers businesses using Google Maps Platform, analyzes their digital maturity, and generates tailored outreach campaigns
+2. **Skills API** ⭐ **NEW**: Enterprise-grade AI agent skills for legal compliance, cybersecurity, and healthcare - built specifically for the Saudi market
 
 🌐 **[View Documentation Site](https://fadil369.github.io/brainsait-ai-automation/)**
+
+---
+
+## 🆕 BrainSAIT Skills API
+
+### Overview
+Enterprise AI skills for Saudi market with SAMA, NCA, and SDAIA compliance. Premium API service offering advanced capabilities in:
+- ⚖️ Legal Compliance (EU AI Act, GDPR, ISO 27001, PDPL)
+- 🛡️ Cybersecurity (Threat Analysis <5s, Deepfake Detection >98%)
+- 🏥 Healthcare Insurance (Saudi-specific regulatory compliance)
+
+### Quick Links
+- 🌐 **Live API**: https://skill-folders-api.brainsait-fadil.workers.dev
+- 📖 **API Docs**: [English](docs/landing/index.html) | [العربية](docs/ar/index.html)
+- 🚀 **Free Trial**: [Start 14-day trial](https://brainsait.com/trial)
+- 📚 **Tutorials**: [Arabic Guides](docs/ar/tutorials.html)
+
+### Pricing (Saudi Market)
+- **Starter**: SAR 7,500-12,000/month (~$2,000-3,200)
+- **Professional**: SAR 22,500-37,500/month (~$6,000-10,000)  ⭐ Most Popular
+- **Enterprise**: SAR 75,000+/month (~$20,000+)
+
+### Repository Structure
+```
+brainsait-ai-automation/
+├── skill-folders-repository/      # Skills API (Cloudflare Workers)
+│   ├── domains/                   # Organized skill domains
+│   │   ├── legal-compliance/
+│   │   ├── cybersecurity/
+│   │   └── healthcare-saudi/
+│   ├── src/                       # API source code
+│   ├── DEPLOYMENT.md             # Deployment guide
+│   └── README.md                 # Skills API documentation
+├── docs/                          # GitHub Pages documentation
+│   ├── landing/                   # English landing page
+│   └── ar/                        # Arabic tutorials & guides
+├── src/brainsait_ai/              # Business Discovery System
+└── IMPLEMENTATION_SUMMARY.md      # Complete implementation summary
+```
+
+### Integration Example
+```python
+from langchain.tools import tool
+import requests
+
+@tool
+def query_brainsait_skills(category: str) -> dict:
+    """Query BrainSAIT compliance skills"""
+    response = requests.get(
+        f"https://skill-folders-api.brainsait-fadil.workers.dev/api/skills?category={category}",
+        headers={"Authorization": "Bearer sk_your_key"}
+    )
+    return response.json()
+```
+
+See [full documentation](skill-folders-repository/README.md) for more details.
+
+---
+
+## 🔍 Business Discovery System
 
 ## ✨ Key Features
 
