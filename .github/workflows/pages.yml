@@ -27,6 +27,12 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
         
+      - name: Prepare docs for deployment
+        run: |
+          # Copy landing page as root index
+          cp docs/landing/index.html docs/skills-api.html
+          echo "Skills API landing page prepared"
+          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:

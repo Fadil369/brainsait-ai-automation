@@ -74,8 +74,11 @@ jobs:
       run: |
         echo "Waiting for deployment to be ready..."
         sleep 10
-        curl -f https://skill-folders-api.brainsait-fadil.workers.dev/health || exit 1
-        echo "Deployment verified successfully!"
+        # Verify the deployed worker is responding
+        WORKER_URL="https://skill-folders-api.brainsait-fadil.workers.dev"
+        echo "Checking $WORKER_URL/health"
+        curl -f "$WORKER_URL/health" || exit 1
+        echo "✓ Deployment verified successfully!"
       continue-on-error: true
     
     - name: Notify deployment status

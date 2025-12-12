@@ -284,7 +284,7 @@ app.get('/api/categories', (c) => {
 app.get('/docs', (c) => {
   return c.json({
     documentation: {
-      baseUrl: 'https://skill-folders-api.brainsait.workers.dev',
+      baseUrl: 'https://skill-folders-api.brainsait-fadil.workers.dev',
       authentication: 'Bearer token required for /api/* endpoints',
       rateLimiting: 'Based on subscription tier',
       endpoints: {
