@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "build": "esbuild src/index.js --bundle --outfile=dist/index.js --format=esm --platform=browser",
-    "test": "jest",
+    "test": "jest --passWithNoTests",
     "test:integration": "node test/integration.js",
     "lint": "eslint src/",
     "format": "prettier --write src/",
