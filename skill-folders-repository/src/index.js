@@ -100,7 +100,7 @@ app.get('/', (c) => {
 app.get('/health', (c) => {
   return c.json({
     status: 'ok',
-    uptime: process.uptime(),
+    environment: 'cloudflare-workers',
     timestamp: new Date().toISOString()
   })
 })
