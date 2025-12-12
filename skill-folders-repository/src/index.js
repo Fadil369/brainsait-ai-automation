@@ -4,6 +4,97 @@ import { logger } from 'hono/logger'
 
 const app = new Hono()
 
+// Tracing utilities
+const generateTraceId = () => crypto.randomUUID()
+const generateSpanId = () => crypto.randomUUID().slice(0, 16)
+
+class Tracer {
+  constructor(c) {
+    this.c = c
+    this.traceId = generateTraceId()
+    this.spans = []
+    this.startTime = Date.now()
+  }
+
+  startSpan(name, attributes = {}) {
+    const span = {
+      spanId: generateSpanId(),
+      traceId: this.traceId,
+      name,
+      startTime: Date.now(),
+      attributes,
+      events: [],
+      status: 'OK'
+    }
+    this.spans.push(span)
+    return span
+  }
+
+  endSpan(span, status = 'OK') {
+    span.endTime = Date.now()
+    span.duration = span.endTime - span.startTime
+    span.status = status
+  }
+
+  addEvent(span, name, attributes = {}) {
+    span.events.push({
+      name,
+      timestamp: Date.now(),
+      attributes
+    })
+  }
+
+  setError(span, error) {
+    span.status = 'ERROR'
+    span.error = {
+      message: error.message,
+      stack: error.stack,
+      type: error.name
+    }
+  }
+
+  // Export trace data for logging/analytics
+  export() {
+    return {
+      traceId: this.traceId,
+      totalDuration: Date.now() - this.startTime,
+      spanCount: this.spans.length,
+      spans: this.spans,
+      metadata: {
+        service: 'skill-folders-api',
+        version: '1.0.0',
+        environment: 'cloudflare-workers'
+      }
+    }
+  }
+
+  // Write to Cloudflare Analytics Engine
+  async writeToAnalytics(env) {
+    if (!env?.ANALYTICS) return
+    
+    try {
+      const trace = this.export()
+      env.ANALYTICS.writeDataPoint({
+        blobs: [
+          this.traceId,
+          this.c.req.path,
+          this.c.req.method,
+          JSON.stringify(trace.spans.map(s => s.name))
+        ],
+        doubles: [
+          trace.totalDuration,
+          trace.spanCount
+        ],
+        indexes: [
+          this.c.get('apiKey')?.slice(0, 8) || 'anonymous'
+        ]
+      })
+    } catch (e) {
+      console.error('Analytics write failed:', e)
+    }
+  }
+}
+
 // Subscription tiers configuration (Saudi market pricing)
 const TIERS = {
   starter: { 
@@ -82,16 +173,68 @@ const rateLimit = async (c, next) => {
   return next()
 }
 
+// Tracing middleware
+const tracing = async (c, next) => {
+  const tracer = new Tracer(c)
+  c.set('tracer', tracer)
+  
+  // Create root span for the request
+  const rootSpan = tracer.startSpan('http.request', {
+    'http.method': c.req.method,
+    'http.url': c.req.url,
+    'http.path': c.req.path,
+    'http.user_agent': c.req.header('User-Agent') || 'unknown',
+    'client.ip': c.req.header('CF-Connecting-IP') || 'unknown'
+  })
+  c.set('rootSpan', rootSpan)
+  
+  // Add trace ID to response headers
+  c.header('X-Trace-ID', tracer.traceId)
+  c.header('X-Request-Id', tracer.traceId)
+  
+  try {
+    await next()
+    
+    // End root span with response info
+    rootSpan.attributes['http.status_code'] = c.res.status
+    tracer.endSpan(rootSpan, c.res.status >= 400 ? 'ERROR' : 'OK')
+  } catch (error) {
+    tracer.setError(rootSpan, error)
+    tracer.endSpan(rootSpan, 'ERROR')
+    throw error
+  } finally {
+    // Log trace summary
+    const trace = tracer.export()
+    console.log(JSON.stringify({
+      level: 'trace',
+      traceId: trace.traceId,
+      path: c.req.path,
+      method: c.req.method,
+      status: c.res?.status,
+      duration: trace.totalDuration,
+      spans: trace.spans.map(s => ({
+        name: s.name,
+        duration: s.duration,
+        status: s.status
+      }))
+    }))
+    
+    // Write to Analytics Engine (non-blocking)
+    c.executionCtx?.waitUntil(tracer.writeToAnalytics(c.env))
+  }
+}
+
 // Middleware
 app.use('*', logger())
 app.use('*', cors({
   origin: '*', // Allow all origins for API access
   allowHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-API-Key'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-Request-Id'],
+  exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-Request-Id', 'X-Trace-ID'],
   maxAge: 600,
   credentials: true,
 }))
+app.use('*', tracing)  // Add tracing before other middleware
 app.use('*', validateApiKey)
 app.use('*', rateLimit)
 
@@ -122,6 +265,11 @@ app.get('/health', (c) => {
 
 // Skills API
 app.get('/api/skills', async (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('skills.list', {
+    'skills.category_filter': c.req.query('category') || 'all'
+  })
+  
   const category = c.req.query('category')
   const language = c.req.header('Accept-Language') || 'en'
   
@@ -190,6 +338,8 @@ app.get('/api/skills', async (c) => {
   }
 
   if (category && skills[category]) {
+    tracer.addEvent(span, 'category_found', { category, count: skills[category].length })
+    tracer.endSpan(span)
     return c.json({
       category,
       skills: skills[category],
@@ -198,6 +348,8 @@ app.get('/api/skills', async (c) => {
     })
   }
 
+  tracer.addEvent(span, 'all_categories', { count: Object.values(skills).flat().length })
+  tracer.endSpan(span)
   return c.json({
     categories: Object.keys(skills),
     totalSkills: Object.values(skills).flat().length,
@@ -207,7 +359,9 @@ app.get('/api/skills', async (c) => {
 
 // Get specific skill
 app.get('/api/skills/:id', async (c) => {
+  const tracer = c.get('tracer')
   const id = c.req.param('id')
+  const span = tracer.startSpan('skills.get', { 'skills.id': id })
   const language = c.req.header('Accept-Language') || 'en'
   
   // Mock skill data
@@ -237,6 +391,8 @@ app.get('/api/skills/:id', async (c) => {
     ]
   }
 
+  tracer.addEvent(span, 'skill_retrieved', { id, category: skill.category })
+  tracer.endSpan(span)
   return c.json({
     skill,
     language,
@@ -246,6 +402,8 @@ app.get('/api/skills/:id', async (c) => {
 
 // Categories endpoint
 app.get('/api/categories', (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('categories.list')
   const language = c.req.header('Accept-Language') || 'en'
   
   const categories = [
@@ -272,6 +430,8 @@ app.get('/api/categories', (c) => {
     }
   ]
 
+  tracer.addEvent(span, 'categories_retrieved', { count: categories.length })
+  tracer.endSpan(span)
   return c.json({
     categories,
     totalCategories: categories.length,
@@ -300,6 +460,20 @@ app.get('/docs', (c) => {
       headers: {
         'Authorization': 'Bearer sk_your_api_key (required for /api/* except /api/pricing)',
         'Accept-Language': 'Optional: en or ar (default: en)'
+      },
+      tracing: {
+        enabled: true,
+        description: 'All requests include distributed tracing',
+        responseHeaders: {
+          'X-Trace-ID': 'Unique trace identifier for debugging',
+          'X-Request-Id': 'Same as X-Trace-ID for compatibility'
+        },
+        features: [
+          'Request/response timing',
+          'Span-based operation tracking',
+          'Error capture and propagation',
+          'Analytics Engine integration'
+        ]
       },
       responseFormat: 'JSON with standardized structure',
       getApiKey: 'Contact sales@brainsait.com or visit https://brainsait.com/api-keys'
@@ -335,112 +509,102 @@ app.get('/api/pricing', (c) => {
           'Bilingual interface'
         ],
         bestFor: language === 'ar' 
-          ? 'الشركات الصغيرة والمتوسطة التي تبدأ رحلة الامتثال الرقمي'
-          : 'SMEs starting their digital compliance journey'
+          ? 'الشركات الصغيرة والمتوسطة في السعودية' 
+          : 'Small to medium businesses in Saudi Arabia',
+        recommended: language === 'ar' ? 'للبدء' : 'For getting started'
       },
       professional: {
-        name: language === 'ar' ? 'باقة الأعمال' : 'Professional',
+        name: language === 'ar' ? 'باقة المحترفين' : 'Professional',
         priceSAR: 'SAR 22,500-37,500/month',
         priceUSD: '$6,000-10,000/month',
         features: language === 'ar' ? [
-          'جميع المهارات في المجال المختار',
+          'وصول لـ 9+ مهارات متقدمة',
           '100,000 استدعاء API شهرياً',
-          'دعم ذو أولوية (عربي/إنجليزي)',
-          'تكوين مخصص للمهارات',
-          'تكاملات Webhook',
-          'لوحة تحليلات الاستخدام',
-          'تقارير الامتثال الشهرية',
-          'تنبيهات التحديثات التنظيمية'
+          'دعم فني مخصص (عربي/إنجليزي)',
+          'التحديثات الأمنية والتشريعية',
+          'جميع المجالات: قانوني، أمن سيبراني، رعاية صحية',
+          'تقارير شهرية مفصلة',
+          'واجهة عربية / إنجليزية'
         ] : [
-          'All skills in chosen domain',
+          '9+ advanced skills access',
           '100,000 API calls/month',
-          'Priority support (Arabic/English)',
-          'Custom skill configuration',
-          'Webhook integrations',
-          'Usage analytics dashboard',
-          'Monthly compliance reports',
-          'Regulatory update alerts'
+          'Dedicated technical support (Arabic/English)',
+          'Security and regulatory updates',
+          'All domains: legal, cybersecurity, healthcare',
+          'Detailed monthly reports',
+          'Bilingual interface'
         ],
-        bestFor: language === 'ar'
-          ? 'الشركات المتنامية مع احتياجات امتثال متخصصة في السوق السعودي'
-          : 'Growing companies with specialized compliance needs in Saudi market'
+        bestFor: language === 'ar' 
+          ? 'الشركات الكبيرة والمؤسسات الصحية' 
+          : 'Large enterprises and healthcare institutions',
+        recommended: language === 'ar' ? 'الأكثر طلباً' : 'Most popular'
       },
       enterprise: {
         name: language === 'ar' ? 'باقة المؤسسات' : 'Enterprise',
         priceSAR: 'SAR 75,000+/month',
         priceUSD: '$20,000+/month',
         features: language === 'ar' ? [
-          'جميع المهارات في جميع المجالات',
-          'استدعاءات API غير محدودة',
-          'دعم مخصص واتفاقية مستوى الخدمة (SLA)',
-          'تطوير مهارات مخصصة حسب الطلب',
-          'خيار النشر الداخلي (On-Premise)',
-          'SSO وأمان متقدم',
-          'دعم ثنائي اللغة (عربي/إنجليزي) 24/7',
-          'تنبيهات تحديثات تنظيمية فورية',
-          'امتثال SAMA، NCA، SDAIA',
-          'استشارات امتثال ربع سنوية',
-          'تكامل مع أنظمة المؤسسة',
-          'مدير حساب مخصص'
+          'وصول غير محدود لجميع المهارات',
+          'استدعاء API غير محدود',
+          'دعم فني 24/7 مع مدير حساب مخصص',
+          'تحديثات فورية للتشريعات السعودية',
+          'تخصيص كامل للمهارات والواجهات',
+          'تقارير مخصصة ولوحات تحكم',
+          'تكامل مع الأنظمة الداخلية',
+          'تدريب للموظفين'
         ] : [
-          'All skills, all domains',
+          'Unlimited access to all skills',
           'Unlimited API calls',
-          'Dedicated support & SLA',
-          'Custom skill development',
-          'On-premise deployment option',
-          'SSO & advanced security',
-          'Bilingual support (Arabic/English) 24/7',
-          'Real-time regulatory update alerts',
-          'SAMA, NCA, SDAIA compliance',
-          'Quarterly compliance consultations',
-          'Enterprise system integration',
-          'Dedicated account manager'
+          '24/7 technical support with dedicated account manager',
+          'Real-time Saudi regulatory updates',
+          'Full customization of skills and interfaces',
+          'Custom reports and dashboards',
+          'Integration with internal systems',
+          'Employee training'
         ],
-        bestFor: language === 'ar'
-          ? 'المؤسسات الكبرى والجهات الحكومية التي تتطلب تغطية امتثال شاملة'
-          : 'Large enterprises and government entities requiring comprehensive compliance coverage'
+        bestFor: language === 'ar' 
+          ? 'الشركات الكبرى وشركات التأمين الصحي' 
+          : 'Major corporations and health insurance companies',
+        recommended: language === 'ar' ? 'للحلول المتكاملة' : 'For comprehensive solutions'
       }
     },
-    saudiCompliance: {
-      frameworks: ['SAMA Cybersecurity Framework', 'NCA Essential Cybersecurity Controls (ECC)', 'SDAIA PDPL', 'Saudi Health Council Regulations'],
-      certifications: ['ISO 27001', 'SOC 2 Type II', 'CITC Licensed']
-    },
-    contact: {
-      sales: 'sales@brainsait.com',
-      salesArabic: 'sales.ksa@brainsait.com',
-      website: 'https://brainsait.com/pricing',
-      whatsapp: '+966-50-XXX-XXXX',
-      demo: 'https://brainsait.com/demo'
-    },
-    trial: {
-      available: true,
-      duration: language === 'ar' ? '14 يوماً' : '14 days',
-      tier: 'professional',
-      signup: 'https://brainsait.com/trial',
-      noCardRequired: true
-    },
-    payment: {
-      methods: ['Bank Transfer', 'Credit Card', 'Invoice (Enterprise only)'],
-      billing: 'Monthly or Annual (15% discount)',
-      currency: 'SAR or USD accepted'
-    }
+    contact: language === 'ar' 
+      ? 'للحصول على عرض سعر مخصص: sales@brainsait.com أو +966 55 123 4567' 
+      : 'For custom pricing: sales@brainsait.com or +966 55 123 4567',
+    terms: language === 'ar' 
+      ? 'جميع الأسعار تشمل ضريبة القيمة المضافة 15%' 
+      : 'All prices include 15% VAT',
+    note: language === 'ar' 
+      ? 'الأسعار بالريال السعودي (SAR) هي الأسعار الرسمية' 
+      : 'Saudi Riyal (SAR) prices are the official prices'
   })
 })
 
 // Error handling
 app.onError((err, c) => {
-  console.error('Error:', err)
+  const tracer = c.get('tracer')
+  const rootSpan = c.get('rootSpan')
+  
+  if (tracer && rootSpan) {
+    tracer.setError(rootSpan, err)
+    tracer.endSpan(rootSpan, 'ERROR')
+  }
+  
+  console.error('Unhandled error:', err)
+  
   return c.json({
-    error: 'Internal server error',
-    message: err.message,
+    error: 'Internal Server Error',
+    message: 'Something went wrong',
+    traceId: tracer?.traceId,
     timestamp: new Date().toISOString()
   }, 500)
 })
 
 app.notFound((c) => {
   return c.json({
-    error: 'Not found',
+    error: 'Not Found',
     message: 'The requested endpoint does not exist',
+    availableEndpoints: ['/', '/health', '/docs', '/api/pricing', '/api/skills', '/api/skills/:id', '/api/categories'],
     timestamp: new Date().toISOString()
   }, 404)
 })

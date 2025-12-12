@@ -9,6 +9,7 @@
 ---
 
 ## Purpose & Business Outcomes
+
 - Deliver authoritative, citation-backed guidance on healthcare insurance compliance (benefits design, claims adjudication, underwriting, member rights, provider contracts).
 - Cite the exact Saudi source (Insurance Authority/CCHI unified policy, MoH directives, Health Council decisions, SDAIA PDPL data/privacy guidance) in every response.
 - Return a clear action list (comply / remediate / escalate) with severity, owner, and due dates.
@@ -32,17 +33,20 @@
 ## Core Components
 
 ### 1. Saudi Regulations Library
+
 - **CCHI / Insurance Authority**: Unified Policy & circulars (Arabic primary source)
 - **Healthcare insurance business regulation**: Licensing requirements, capital adequacy
 - **Data protection**: PDPL compliance for PHI/PII handling
 - **Health Council pricing/coding**: Payer obligation references where applicable
 
 ### 2. Local Interpretation Framework
+
 - Official circular interpretation hierarchy: Authority → Council → Ministry guidance
 - Precedent log of regulator FAQs and clarifications
 - Localization rules: Arabic-first citations; English summaries permitted
 
 ### 3. Evidence & Traceability
+
 - Citation string: `[Authority] - [Doc/Article] - [Date]`
 - Response structure: citation → compliance verdict → remediation steps → owner → due date
 - Decision ID for audit trail
@@ -92,6 +96,7 @@ flowchart TD
 ```
 
 ### Detailed Steps
+
 1. **Classify** the inquiry: policy wording, claims handling, underwriting, provider contract, data/privacy.
 2. **Map authority priority**: Insurance Authority/CCHI → SHC → MoH → PDPL.
 3. **Retrieve** most recent circular/article (Arabic source preferred); capture version/date.
