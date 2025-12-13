@@ -23,6 +23,7 @@ jobs:
       with:
         node-version: '18'
         cache: 'npm'
+        cache-dependency-path: 'skill-folders-repository/package-lock.json'
     
     - name: Install dependencies
       run: |
