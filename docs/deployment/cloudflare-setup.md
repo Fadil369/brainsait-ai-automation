@@ -41,7 +41,7 @@ Refer to [SECURITY.md](../../SECURITY.md) for comprehensive security guidelines.
 3. Your Account ID is displayed on the right side
 4. Copy this ID - you'll need it for environment configuration
 
-**⚠️ Security Note**: Treat your Account ID as sensitive information. While not as critical as API tokens, it can be used for account enumeration.
+**📝 Note**: While Cloudflare account IDs are not considered highly sensitive and are often visible in public configurations, using environment variables for them provides consistency in configuration management and makes it easier to manage multiple environments.
 
 ---
 

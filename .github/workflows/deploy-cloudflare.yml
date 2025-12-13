@@ -91,7 +91,7 @@ jobs:
           const { repo, owner } = context.repo;
           const runId = context.runId;
           const workflow = context.workflow;
-          const jobStatus = process.env.JOB_STATUS || 'unknown';
+          const jobStatus = process.env.JOB_STATUS || 'failed';
           
           const message = jobStatus === 'success' 
             ? `✅ Deployment successful! Workers updated.`
