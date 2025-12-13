@@ -147,6 +147,86 @@ brainsait-discover offers analysis_results.json
 brainsait-discover config
 ```
 
+## 🔒 Security Setup & Best Practices
+
+### Environment Variables
+
+**CRITICAL**: Never commit sensitive credentials to version control. All secrets must be stored in environment variables.
+
+#### Local Development Setup
+
+1. **Create your `.env` file from template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Configure your credentials:**
+   ```env
+   # Business Discovery System
+   GOOGLE_MAPS_API_KEY=your-actual-google-maps-key
+   OPENAI_API_KEY=your-actual-openai-key
+   
+   # Cloudflare Workers (Skills API)
+   CLOUDFLARE_ACCOUNT_ID=your-actual-account-id
+   CLOUDFLARE_API_TOKEN=your-actual-api-token
+   
+   # KV Namespace IDs
+   KV_NAMESPACE_ID_DEV=your-dev-namespace-id
+   KV_NAMESPACE_ID_PROD=your-prod-namespace-id
+   ```
+
+3. **Verify `.env` is in `.gitignore`:**
+   ```bash
+   grep "^\.env$" .gitignore
+   ```
+
+#### GitHub Actions / CI/CD Setup
+
+For secure CI/CD deployments:
+
+1. **Navigate to your repository settings:**
+   - Go to **Settings** → **Secrets and variables** → **Actions**
+
+2. **Add the following secrets:**
+   - `CLOUDFLARE_ACCOUNT_ID` - Your Cloudflare account identifier
+   - `CLOUDFLARE_API_TOKEN` - API token with Workers edit permissions
+
+3. **Verify workflow configuration:**
+   - The `.github/workflows/deploy-cloudflare.yml` is pre-configured to use these secrets
+
+#### Cloudflare Workers Deployment
+
+For detailed Cloudflare Workers setup, including:
+- API token creation with proper scopes
+- KV namespace provisioning
+- Environment-specific configuration
+- Security best practices
+
+See our comprehensive guide: [Cloudflare Setup Documentation](docs/deployment/cloudflare-setup.md)
+
+### Security Compliance
+
+All development and deployment must comply with:
+- ✅ **HIPAA Technical Safeguards § 164.312(a)** - Access Control
+- ✅ **Zero Trust Architecture** - No hard-coded credentials
+- ✅ **Principle of Least Privilege** - Minimal API token scopes
+- ✅ **Security by Design** - Secrets management from inception
+- ✅ **Audit Logging** - All secret access logged in CI/CD
+
+Refer to [SECURITY.md](SECURITY.md) for comprehensive security policies and procedures.
+
+### Quick Security Checklist
+
+Before deploying to production:
+
+- [ ] No hard-coded credentials in code or configuration files
+- [ ] All secrets stored in environment variables or GitHub Secrets
+- [ ] `.env` file is in `.gitignore` and not committed
+- [ ] API tokens have minimal required permissions
+- [ ] Regular security audits with `npm audit` or `pip audit`
+- [ ] HTTPS/TLS enabled for all endpoints
+- [ ] Error messages don't expose sensitive information
+
 ## 🏗️ Architecture
 
 ```

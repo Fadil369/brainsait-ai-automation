@@ -82,25 +82,29 @@ jobs:
       continue-on-error: true
     
     - name: Notify deployment status
-      if: always()
+      if: always() && github.event_name == 'pull_request'
       uses: actions/github-script@v7
+      env:
+        JOB_STATUS: ${{ job.status }}
       with:
         script: |
           const { repo, owner } = context.repo;
           const runId = context.runId;
           const workflow = context.workflow;
-          const status = job.status;
+          const jobStatus = process.env.JOB_STATUS || 'unknown';
           
-          const message = status === 'success' 
+          const message = jobStatus === 'success' 
             ? `✅ Deployment successful! Workers updated.`
             : `❌ Deployment failed. Check logs for details.`;
           
-          github.rest.issues.createComment({
-            owner,
-            repo,
-            issue_number: context.payload.pull_request?.number || 0,
-            body: `## ${workflow} ${status.toUpperCase()}\n\n${message}\n\n[View workflow run](https://github.com/${owner}/${repo}/actions/runs/${runId})`
-          });
+          if (context.payload.pull_request) {
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: context.payload.pull_request.number,
+              body: `## ${workflow} ${jobStatus.toUpperCase()}\n\n${message}\n\n[View workflow run](https://github.com/${owner}/${repo}/actions/runs/${runId})`
+            });
+          }
     
     - name: Update deployment status
       uses: bobheadxi/deployments@v1
