@@ -35,6 +35,12 @@ jobs:
         npm test
       continue-on-error: false
     
+    - name: Security audit
+      run: |
+        cd skill-folders-repository
+        npm audit --audit-level=high
+      continue-on-error: true
+    
     - name: Lint code
       run: |
         cd skill-folders-repository
@@ -62,6 +68,17 @@ jobs:
       run: |
         cd skill-folders-repository
         npm run test:integration
+      continue-on-error: true
+    
+    - name: Verify deployment
+      run: |
+        echo "Waiting for deployment to be ready..."
+        sleep 10
+        # Verify the deployed worker is responding
+        WORKER_URL="https://skill-folders-api.brainsait-fadil.workers.dev"
+        echo "Checking $WORKER_URL/health"
+        curl -f "$WORKER_URL/health" || exit 1
+        echo "✓ Deployment verified successfully!"
       continue-on-error: true
     
     - name: Notify deployment status

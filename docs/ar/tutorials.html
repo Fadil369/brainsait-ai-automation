@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الدروس التعليمية - BrainSAIT Skills API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #0047AB;
+            --secondary: #00A86B;
+            --accent: #FFD700;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --code-bg: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.8;
+            color: #333;
+            background: var(--light);
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        .page-title {
+            font-size: 2.5rem;
+            color: var(--dark);
+            margin-bottom: 1rem;
+        }
+
+        .page-description {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 3rem;
+        }
+
+        .tutorial-section {
+            background: white;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .tutorial-section h2 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .tutorial-section h3 {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem 0;
+        }
+
+        .tutorial-section h4 {
+            color: var(--dark);
+            font-size: 1.2rem;
+            margin: 1.5rem 0 0.8rem 0;
+        }
+
+        .tutorial-section p {
+            margin-bottom: 1rem;
+            line-height: 1.9;
+        }
+
+        .tutorial-section ul, .tutorial-section ol {
+            margin: 1rem 0;
+            padding-right: 2rem;
+        }
+
+        .tutorial-section li {
+            margin: 0.5rem 0;
+        }
+
+        .code-block {
+            background: var(--code-bg);
+            color: #a9dcf0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .code-block pre {
+            margin: 0;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-right: 4px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-right: 4px solid #ffc107;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            border-right: 4px solid #28a745;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 5px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            margin-left: 0.5rem;
+            font-weight: bold;
+        }
+
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">🧠 BrainSAIT Skills API</div>
+            <ul class="nav-links">
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="tutorials.html">الدروس</a></li>
+                <li><a href="guides.html">الأدلة</a></li>
+                <li><a href="../landing/index.html">English</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">الدروس التعليمية</h1>
+        <p class="page-description">تعلم كيفية استخدام BrainSAIT Skills API خطوة بخطوة</p>
+
+        <!-- Quickstart Tutorial -->
+        <div id="quickstart" class="tutorial-section">
+            <h2>1. البدء السريع مع BrainSAIT API</h2>
+            
+            <p>في هذا الدرس، ستتعلم كيفية البدء باستخدام BrainSAIT Skills API خلال 30 دقيقة فقط.</p>
+
+            <h3>الخطوة 1: إنشاء حساب والحصول على مفتاح API</h3>
+            
+            <ol>
+                <li>قم بزيارة <a href="https://brainsait.com/signup" target="_blank">صفحة التسجيل</a></li>
+                <li>أدخل بياناتك (الاسم، البريد الإلكتروني، اسم الشركة)</li>
+                <li>اختر خطة الاشتراك المناسبة (يمكنك البدء بالتجربة المجانية)</li>
+                <li>بعد التسجيل، ستحصل على مفتاح API الخاص بك</li>
+            </ol>
+
+            <div class="info-box">
+                <strong>💡 ملاحظة:</strong> مفتاح API الخاص بك يبدأ بـ <code>sk_</code> ويجب الاحتفاظ به بشكل آمن. لا تشاركه مع أحد ولا تنشره في أكواد عامة.
+            </div>
+
+            <h3>الخطوة 2: أول استدعاء API</h3>
+
+            <p>دعنا نبدأ بأبسط استدعاء - الحصول على معلومات الخدمة:</p>
+
+            <div class="code-block">
+                <pre>curl https://skill-folders-api.brainsait-fadil.workers.dev/</pre>
+            </div>
+
+            <p>الاستجابة ستكون بهذا الشكل:</p>
+
+            <div class="code-block">
+                <pre>{
+  "status": "healthy",
+  "service": "Skill Folders API",
+  "version": "1.0.0",
+  "timestamp": "2025-12-12T22:00:00.000Z",
+  "endpoints": {
+    "skills": "/api/skills",
+    "categories": "/api/categories",
+    "health": "/health",
+    "docs": "/docs"
+  }
+}</pre>
+            </div>
+
+            <h3>الخطوة 3: استدعاء محمي بمفتاح API</h3>
+
+            <p>الآن دعنا نستخدم مفتاح API للوصول إلى قائمة المهارات:</p>
+
+            <div class="code-block">
+                <pre>curl -H "Authorization: Bearer sk_your_api_key_here" \
+  https://skill-folders-api.brainsait-fadil.workers.dev/api/skills</pre>
+            </div>
+
+            <div class="warning-box">
+                <strong>⚠️ تحذير:</strong> استبدل <code>sk_your_api_key_here</code> بمفتاح API الحقيقي الخاص بك.
+            </div>
+
+            <h3>الخطوة 4: التصفية حسب الفئة</h3>
+
+            <p>للحصول على مهارات محددة حسب المجال (مثل الرعاية الصحية):</p>
+
+            <div class="code-block">
+                <pre>curl -H "Authorization: Bearer sk_your_api_key" \
+  "https://skill-folders-api.brainsait-fadil.workers.dev/api/skills?category=healthcare-saudi"</pre>
+            </div>
+
+            <h3>الخطوة 5: الحصول على تفاصيل مهارة محددة</h3>
+
+            <div class="code-block">
+                <pre>curl -H "Authorization: Bearer sk_your_api_key" \
+  https://skill-folders-api.brainsait-fadil.workers.dev/api/skills/health-001</pre>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ تهانينا!</strong> لقد تمكنت من إجراء أول استدعاءات API بنجاح.
+            </div>
+        </div>
+
+        <!-- GPT Actions Tutorial -->
+        <div id="gpt-actions" class="tutorial-section">
+            <h2>2. تكامل مع OpenAI GPT Actions</h2>
+
+            <p>تعلم كيفية ربط مهارات BrainSAIT مع Custom GPT الخاص بك.</p>
+
+            <h3>الخطوة 1: إنشاء Custom GPT</h3>
+
+            <ol>
+                <li>اذهب إلى <a href="https://chat.openai.com" target="_blank">ChatGPT</a></li>
+                <li>انقر على "Explore GPTs" ثم "Create"</li>
+                <li>في قسم "Actions"، انقر على "Create new action"</li>
+            </ol>
+
+            <h3>الخطوة 2: إضافة OpenAPI Schema</h3>
+
+            <p>انسخ الكود التالي في محرر Schema:</p>
+
+            <div class="code-block">
+                <pre>openapi: 3.0.0
+info:
+  title: BrainSAIT Skills API
+  version: 1.0.0
+  description: Enterprise AI skills for Saudi market
+servers:
+  - url: https://skill-folders-api.brainsait-fadil.workers.dev
+paths:
+  /api/skills:
+    get:
+      operationId: getSkills
+      summary: Get list of available skills
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by category (legal-compliance, cybersecurity, healthcare-saudi)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+  /api/skills/{id}:
+    get:
+      operationId: getSkillDetails
+      summary: Get details of a specific skill
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successful response
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer</pre>
+            </div>
+
+            <h3>الخطوة 3: تكوين المصادقة</h3>
+
+            <ol>
+                <li>في قسم "Authentication"، اختر "API Key"</li>
+                <li>نوع المصادقة: "Bearer"</li>
+                <li>أدخل مفتاح API الخاص بك</li>
+            </ol>
+
+            <h3>الخطوة 4: اختبار التكامل</h3>
+
+            <p>في محادثة GPT، اسأل:</p>
+
+            <div class="code-block">
+                <pre>"ما هي المهارات المتوفرة في مجال الأمن السيبراني؟"</pre>
+            </div>
+
+            <p>يجب أن يستخدم GPT الآن مهارات BrainSAIT للإجابة على سؤالك!</p>
+
+            <div class="success-box">
+                <strong>✅ ممتاز!</strong> لقد قمت بربط BrainSAIT مع GPT بنجاح.
+            </div>
+        </div>
+
+        <!-- Threat Detection Tutorial -->
+        <div id="threat-detection" class="tutorial-section">
+            <h2>3. كشف التهديدات السيبرانية</h2>
+
+            <p>استخدام مهارة تحليل التهديدات للكشف المبكر عن الهجمات السيبرانية.</p>
+
+            <h3>نظرة عامة</h3>
+
+            <p>مهارة تحليل التهديدات توفر:</p>
+            <ul>
+                <li>مراقبة الشبكة في الوقت الفعلي (24/7)</li>
+                <li>كشف الأنماط الشاذة باستخدام التعلم الآلي</li>
+                <li>تصنيف التهديدات حسب إطار MITRE ATT&CK</li>
+                <li>استجابة تلقائية للتهديدات الحرجة</li>
+            </ul>
+
+            <h3>حالات الاستخدام</h3>
+
+            <h4>1. كشف اتصالات C2 (Command & Control)</h4>
+
+            <p>عندما يتم اكتشاف اتصالات دورية مشبوهة إلى IP خارجي:</p>
+
+            <div class="code-block">
+                <pre>{
+  "severity": "High",
+  "threat_type": "Command and Control",
+  "mitre_ttps": ["T1071"],
+  "iocs": {
+    "ip": "185.220.101.x",
+    "beacon_interval": "60s",
+    "domain": "suspicious-domain.com"
+  },
+  "recommended_actions": [
+    "حظر IP على جدار الحماية",
+    "عزل الجهاز المصاب",
+    "فحص العمليات الجارية"
+  ],
+  "confidence": 92
+}</pre>
+            </div>
+
+            <h4>2. كشف تسرب البيانات</h4>
+
+            <p>عند اكتشاف نقل كميات كبيرة من البيانات إلى خدمات تخزين سحابية:</p>
+
+            <div class="code-block">
+                <pre>{
+  "severity": "Critical",
+  "threat_type": "Data Exfiltration",
+  "mitre_ttps": ["T1567"],
+  "affected_assets": ["database-server-01", "user-ahmed"],
+  "recommended_actions": [
+    "تعليق حساب المستخدم فوراً",
+    "حظر الوصول لخدمات التخزين السحابي",
+    "مراجعة سجلات الوصول"
+  ],
+  "confidence": 87
+}</pre>
+            </div>
+
+            <h3>التكامل مع SIEM</h3>
+
+            <p>يمكن تكامل مهارة تحليل التهديدات مع أنظمة SIEM الموجودة لديك:</p>
+
+            <ul>
+                <li><strong>Splunk:</strong> استخدام HTTP Event Collector (HEC)</li>
+                <li><strong>ELK Stack:</strong> إرسال عبر Logstash</li>
+                <li><strong>Azure Sentinel:</strong> استخدام Data Connector API</li>
+                <li><strong>Chronicle:</strong> استخدام Ingestion API</li>
+            </ul>
+
+            <div class="info-box">
+                <strong>💡 نصيحة:</strong> للحصول على أفضل النتائج، قم بإرسال سجلات من مصادر متعددة (جدار حماية، نقاط النهاية، السحابة) لتحليل شامل.
+            </div>
+        </div>
+
+        <!-- Python Integration Example -->
+        <div class="tutorial-section">
+            <h2>4. مثال تطبيقي: تطبيق Python كامل</h2>
+
+            <p>مثال كامل لتطبيق Python يستخدم BrainSAIT Skills API:</p>
+
+            <div class="code-block">
+                <pre>import requests
+import json
+
+class BrainSAITClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://skill-folders-api.brainsait-fadil.workers.dev"
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+    
+    def get_skills(self, category=None):
+        """احصل على قائمة المهارات"""
+        url = f"{self.base_url}/api/skills"
+        params = {"category": category} if category else {}
+        
+        response = requests.get(url, headers=self.headers, params=params)
+        response.raise_for_status()
+        return response.json()
+    
+    def get_skill_details(self, skill_id):
+        """احصل على تفاصيل مهارة محددة"""
+        url = f"{self.base_url}/api/skills/{skill_id}"
+        
+        response = requests.get(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()
+    
+    def check_compliance(self, regulation, scenario):
+        """تحقق من الامتثال لتنظيم معين"""
+        # مثال على استخدام مهارة الامتثال القانوني
+        skills = self.get_skills(category="legal-compliance")
+        
+        # معالجة السيناريو واستخراج النتائج
+        return {
+            "compliant": True,
+            "regulation": regulation,
+            "recommendations": ["توصية 1", "توصية 2"]
+        }
+
+
+# مثال على الاستخدام
+if __name__ == "__main__":
+    # استبدل بمفتاح API الخاص بك
+    client = BrainSAITClient("sk_your_api_key_here")
+    
+    # احصل على جميع المهارات
+    print("جميع المهارات المتوفرة:")
+    all_skills = client.get_skills()
+    print(json.dumps(all_skills, indent=2, ensure_ascii=False))
+    
+    # احصل على مهارات الأمن السيبراني فقط
+    print("\nمهارات الأمن السيبراني:")
+    cyber_skills = client.get_skills(category="cybersecurity")
+    print(json.dumps(cyber_skills, indent=2, ensure_ascii=False))
+    
+    # احصل على تفاصيل مهارة محددة
+    print("\nتفاصيل مهارة معينة:")
+    skill_details = client.get_skill_details("cyber-001")
+    print(json.dumps(skill_details, indent=2, ensure_ascii=False))</pre>
+            </div>
+
+            <h3>تشغيل المثال</h3>
+
+            <ol>
+                <li>احفظ الكود في ملف <code>brainsait_example.py</code></li>
+                <li>قم بتثبيت مكتبة requests: <code>pip install requests</code></li>
+                <li>استبدل <code>sk_your_api_key_here</code> بمفتاحك الحقيقي</li>
+                <li>شغل الملف: <code>python brainsait_example.py</code></li>
+            </ol>
+
+            <div class="success-box">
+                <strong>✅ رائع!</strong> لديك الآن تطبيق Python كامل يتكامل مع BrainSAIT.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 BrainSAIT. جميع الحقوق محفوظة.</p>
+    </footer>
+</body>
+</html>

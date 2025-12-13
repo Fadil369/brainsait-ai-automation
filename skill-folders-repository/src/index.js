@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { StripeIdentityService, stripeWebhookMiddleware, formatVerificationResponse } from './stripe-identity.js'
 
 const app = new Hono()
 
@@ -95,11 +96,26 @@ class Tracer {
   }
 }
 
-// Subscription tiers configuration
+// Subscription tiers configuration (Saudi market pricing)
 const TIERS = {
-  starter: { limit: 10000, skills: ['legal-compliance'], price: '$500-1,000/month' },
-  professional: { limit: 100000, skills: ['legal-compliance', 'cybersecurity', 'healthcare-saudi'], price: '$2,000-5,000/month' },
-  enterprise: { limit: Infinity, skills: '*', price: '$10,000+/month' }
+  starter: { 
+    limit: 10000, 
+    skills: ['legal-compliance'], 
+    price: 'SAR 7,500-12,000/month',
+    priceUSD: '$2,000-3,200/month' 
+  },
+  professional: { 
+    limit: 100000, 
+    skills: ['legal-compliance', 'cybersecurity', 'healthcare-saudi'], 
+    price: 'SAR 22,500-37,500/month',
+    priceUSD: '$6,000-10,000/month' 
+  },
+  enterprise: { 
+    limit: Infinity, 
+    skills: '*', 
+    price: 'SAR 75,000+/month',
+    priceUSD: '$20,000+/month' 
+  }
 }
 
 // API Key validation middleware
@@ -107,7 +123,12 @@ const validateApiKey = async (c, next) => {
   const path = c.req.path
   
   // Public endpoints (no auth required)
-  if (['/', '/health', '/docs', '/api/pricing'].includes(path)) {
+  if (['/', '/health', '/docs', '/api/pricing', '/api/identity/config'].includes(path)) {
+    return next()
+  }
+  
+  // Stripe webhook endpoint uses signature-based auth, not API key
+  if (path === '/api/stripe/webhook') {
     return next()
   }
   
@@ -213,7 +234,7 @@ const tracing = async (c, next) => {
 app.use('*', logger())
 app.use('*', cors({
   origin: '*', // Allow all origins for API access
-  allowHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-API-Key'],
+  allowHeaders: ['Content-Type', 'Authorization', 'Accept-Language', 'X-API-Key', 'Stripe-Signature'],
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   exposeHeaders: ['Content-Length', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-Request-Id', 'X-Trace-ID'],
   maxAge: 600,
@@ -466,76 +487,489 @@ app.get('/docs', (c) => {
   })
 })
 
-// Pricing endpoint (public)
+// Pricing endpoint (public) - Saudi Market Focused
 app.get('/api/pricing', (c) => {
+  const language = c.req.header('Accept-Language') || 'en'
+  
   return c.json({
+    market: 'Saudi Arabia (KSA)',
+    currency: 'SAR (Saudi Riyal)',
     tiers: {
       starter: {
-        price: '$500-1,000/month',
-        features: [
-          '3 basic skills access',
+        name: language === 'ar' ? 'باقة البداية' : 'Starter',
+        priceSAR: 'SAR 7,500-12,000/month',
+        priceUSD: '$2,000-3,200/month',
+        features: language === 'ar' ? [
+          'وصول لـ 3 مهارات أساسية',
+          '10,000 استدعاء API شهرياً',
+          'دعم عبر البريد الإلكتروني',
+          'التحديثات الأمنية',
+          'مجال الامتثال القانوني فقط',
+          'واجهة عربية / إنجليزية'
+        ] : [
+          '3 foundational skills access',
           '10,000 API calls/month',
-          'Email support',
+          'Email support (Arabic/English)',
           'Security updates',
-          'Legal Compliance domain only'
+          'Legal Compliance domain only',
+          'Bilingual interface'
         ],
-        bestFor: 'Small teams getting started with AI compliance'
+        bestFor: language === 'ar' 
+          ? 'الشركات الصغيرة والمتوسطة في السعودية' 
+          : 'Small to medium businesses in Saudi Arabia',
+        recommended: language === 'ar' ? 'للبدء' : 'For getting started'
       },
       professional: {
-        price: '$2,000-5,000/month',
-        features: [
-          'All skills in chosen domain',
+        name: language === 'ar' ? 'باقة المحترفين' : 'Professional',
+        priceSAR: 'SAR 22,500-37,500/month',
+        priceUSD: '$6,000-10,000/month',
+        features: language === 'ar' ? [
+          'وصول لـ 9+ مهارات متقدمة',
+          '100,000 استدعاء API شهرياً',
+          'دعم فني مخصص (عربي/إنجليزي)',
+          'التحديثات الأمنية والتشريعية',
+          'جميع المجالات: قانوني، أمن سيبراني، رعاية صحية',
+          'تقارير شهرية مفصلة',
+          'واجهة عربية / إنجليزية'
+        ] : [
+          '9+ advanced skills access',
           '100,000 API calls/month',
-          'Priority support',
-          'Custom skill configuration',
-          'Webhook integrations',
-          'Usage analytics dashboard'
+          'Dedicated technical support (Arabic/English)',
+          'Security and regulatory updates',
+          'All domains: legal, cybersecurity, healthcare',
+          'Detailed monthly reports',
+          'Bilingual interface'
         ],
-        bestFor: 'Growing companies with specific domain needs'
+        bestFor: language === 'ar' 
+          ? 'الشركات الكبيرة والمؤسسات الصحية' 
+          : 'Large enterprises and healthcare institutions',
+        recommended: language === 'ar' ? 'الأكثر طلباً' : 'Most popular'
       },
       enterprise: {
-        price: '$10,000+/month',
-        features: [
-          'All skills, all domains',
+        name: language === 'ar' ? 'باقة المؤسسات' : 'Enterprise',
+        priceSAR: 'SAR 75,000+/month',
+        priceUSD: '$20,000+/month',
+        features: language === 'ar' ? [
+          'وصول غير محدود لجميع المهارات',
+          'استدعاء API غير محدود',
+          'دعم فني 24/7 مع مدير حساب مخصص',
+          'تحديثات فورية للتشريعات السعودية',
+          'تخصيص كامل للمهارات والواجهات',
+          'تقارير مخصصة ولوحات تحكم',
+          'تكامل مع الأنظمة الداخلية',
+          'تدريب للموظفين'
+        ] : [
+          'Unlimited access to all skills',
           'Unlimited API calls',
-          'Dedicated support & SLA',
-          'Custom skill development',
-          'On-premise deployment option',
-          'SSO & advanced security',
-          'Arabic/English bilingual support',
-          'Regulatory update alerts'
+          '24/7 technical support with dedicated account manager',
+          'Real-time Saudi regulatory updates',
+          'Full customization of skills and interfaces',
+          'Custom reports and dashboards',
+          'Integration with internal systems',
+          'Employee training'
         ],
-        bestFor: 'Large organizations requiring full compliance coverage'
+        bestFor: language === 'ar' 
+          ? 'الشركات الكبرى وشركات التأمين الصحي' 
+          : 'Major corporations and health insurance companies',
+        recommended: language === 'ar' ? 'للحلول المتكاملة' : 'For comprehensive solutions'
       }
     },
-    contact: {
-      sales: 'sales@brainsait.com',
-      website: 'https://brainsait.com/pricing',
-      demo: 'https://brainsait.com/demo'
+    contact: language === 'ar' 
+      ? 'للحصول على عرض سعر مخصص: sales@brainsait.com أو +966 55 123 4567' 
+      : 'For custom pricing: sales@brainsait.com or +966 55 123 4567',
+    terms: language === 'ar' 
+      ? 'جميع الأسعار تشمل ضريبة القيمة المضافة 15%' 
+      : 'All prices include 15% VAT',
+    note: language === 'ar' 
+      ? 'الأسعار بالريال السعودي (SAR) هي الأسعار الرسمية' 
+      : 'Saudi Riyal (SAR) prices are the official prices'
+  })
+})
+
+// ============================================
+// Stripe Identity Endpoints
+// ============================================
+
+// Stripe webhook endpoint (no auth required for webhooks)
+app.post('/api/stripe/webhook', stripeWebhookMiddleware, async (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('stripe.webhook')
+  const signature = c.get('stripeSignature')
+  
+  try {
+    const stripeService = new StripeIdentityService(c.env)
+    const result = await stripeService.handleWebhook(c.req.raw, signature)
+    
+    tracer.addEvent(span, 'webhook_processed', { eventType: result.eventType, success: result.success })
+    tracer.endSpan(span, result.success ? 'OK' : 'ERROR')
+    
+    return c.json({
+      success: result.success,
+      eventType: result.eventType,
+      sessionId: result.sessionId,
+      timestamp: new Date().toISOString()
+    }, result.statusCode || 200)
+  } catch (error) {
+    tracer.setError(span, error)
+    tracer.endSpan(span, 'ERROR')
+    
+    console.error('Stripe webhook processing error:', error)
+    return c.json({
+      success: false,
+      error: 'Webhook processing failed',
+      message: error.message
+    }, 500)
+  }
+})
+
+// Create identity verification session (auth required)
+app.post('/api/identity/verify', async (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('identity.verify.create')
+  const language = c.req.header('Accept-Language') || 'en'
+  
+  try {
+    const body = await c.req.json()
+    const { userId, email, fullName, userType = 'general', language: userLanguage } = body
+    
+    if (!userId || !email || !fullName) {
+      tracer.setError(span, new Error('Missing required fields'))
+      tracer.endSpan(span, 'ERROR')
+      return c.json({
+        success: false,
+        error: 'Missing required fields',
+        message: 'userId, email, and fullName are required'
+      }, 400)
+    }
+    
+    const stripeService = new StripeIdentityService(c.env)
+    let result
+    
+    // Handle different user types
+    if (userType === 'healthcare_professional') {
+      const { licenseNumber, specialty } = body
+      result = await stripeService.createHealthcareProfessionalVerification({
+        userId,
+        email,
+        fullName,
+        licenseNumber,
+        specialty,
+        language: userLanguage || language
+      })
+    } else {
+      result = await stripeService.createVerificationSession({
+        clientReferenceId: userId,
+        userEmail: email,
+        userName: fullName,
+        language: userLanguage || language
+      })
+    }
+    
+    if (!result.success) {
+      tracer.setError(span, new Error(result.error))
+      tracer.endSpan(span, 'ERROR')
+      return c.json({
+        success: false,
+        error: result.error,
+        code: result.code,
+        message: 'Failed to create verification session'
+      }, 400)
+    }
+    
+    tracer.addEvent(span, 'session_created', { 
+      sessionId: result.sessionId, 
+      userType,
+      language: userLanguage || language 
+    })
+    tracer.endSpan(span, 'OK')
+    
+    return c.json({
+      success: true,
+      sessionId: result.sessionId,
+      clientSecret: result.clientSecret,
+      url: result.url,
+      expiresAt: result.expiresAt,
+      status: result.status,
+      clientConfig: stripeService.getClientConfig(c.env.STRIPE_PUBLISHABLE_KEY),
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    tracer.setError(span, error)
+    tracer.endSpan(span, 'ERROR')
+    
+    console.error('Identity verification creation error:', error)
+    return c.json({
+      success: false,
+      error: 'Verification session creation failed',
+      message: error.message
+    }, 500)
+  }
+})
+
+// Get verification session status (auth required)
+app.get('/api/identity/verify/:sessionId', async (c) => {
+  const tracer = c.get('tracer')
+  const sessionId = c.req.param('sessionId')
+  const span = tracer.startSpan('identity.verify.get', { 'session.id': sessionId })
+  const language = c.req.header('Accept-Language') || 'en'
+  
+  try {
+    const stripeService = new StripeIdentityService(c.env)
+    const result = await stripeService.getVerificationSession(sessionId)
+    
+    if (!result.success) {
+      tracer.setError(span, new Error(result.error))
+      tracer.endSpan(span, 'ERROR')
+      return c.json({
+        success: false,
+        error: result.error,
+        code: result.code,
+        message: 'Failed to retrieve verification session'
+      }, 400)
+    }
+    
+    tracer.addEvent(span, 'session_retrieved', { 
+      sessionId: result.sessionId,
+      status: result.status,
+      clientReferenceId: result.clientReferenceId 
+    })
+    tracer.endSpan(span, 'OK')
+    
+    // Format response for BrainSAIT API
+    const formattedResponse = formatVerificationResponse(result, language)
+    
+    return c.json({
+      success: true,
+      sessionId: result.sessionId,
+      status: result.status,
+      ...formattedResponse,
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    tracer.setError(span, error)
+    tracer.endSpan(span, 'ERROR')
+    
+    console.error('Identity verification retrieval error:', error)
+    return c.json({
+      success: false,
+      error: 'Verification session retrieval failed',
+      message: error.message
+    }, 500)
+  }
+})
+
+// Validate Saudi ID format (utility endpoint)
+app.post('/api/identity/validate/saudi-id', async (c) => {
+  const tracer = c.get('tracer')
+  const span = tracer.startSpan('identity.validate.saudi_id')
+  const language = c.req.header('Accept-Language') || 'en'
+  
+  try {
+    const body = await c.req.json()
+    const { idNumber } = body
+    
+    if (!idNumber) {
+      tracer.setError(span, new Error('Missing ID number'))
+      tracer.endSpan(span, 'ERROR')
+      return c.json({
+        success: false,
+        error: 'Missing ID number',
+        message: 'idNumber is required'
+      }, 400)
+    }
+    
+    const stripeService = new StripeIdentityService(c.env)
+    const isValid = stripeService.validateSaudiIdFormat(idNumber)
+    const idType = idNumber.startsWith('1') ? 'saudi_national_id' : 
+                   idNumber.startsWith('2') ? 'iqama_residence_id' : 'unknown'
+    
+    tracer.addEvent(span, 'id_validated', { idNumber, isValid, idType })
+    tracer.endSpan(span, 'OK')
+    
+    return c.json({
+      success: true,
+      isValid,
+      idType,
+      idNumber: idNumber.slice(0, 3) + '****' + idNumber.slice(-3), // Mask for security
+      message: language === 'ar' 
+        ? isValid 
+          ? `رقم ${idType === 'saudi_national_id' ? 'الهوية الوطنية' : 'الإقامة'} صالح`
+          : 'رقم الهوية غير صالح'
+        : isValid
+          ? `${idType.replace(/_/g, ' ')} is valid`
+          : 'ID number is invalid',
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    tracer.setError(span, error)
+    tracer.endSpan(span, 'ERROR')
+    
+    console.error('Saudi ID validation error:', error)
+    return c.json({
+      success: false,
+      error: 'ID validation failed',
+      message: error.message
+    }, 500)
+  }
+})
+
+// Get Stripe client configuration (public)
+app.get('/api/identity/config', (c) => {
+  const language = c.req.header('Accept-Language') || 'en'
+  
+  const stripeService = new StripeIdentityService(c.env)
+  const config = stripeService.getClientConfig(c.env.STRIPE_PUBLISHABLE_KEY)
+  
+  return c.json({
+    success: true,
+    config,
+    supportedFeatures: {
+      identityVerification: true,
+      saudiMarket: true,
+      bilingualSupport: ['ar', 'en'],
+      documentTypes: ['saudi_id_card', 'iqama', 'passport', 'driving_license'],
+      compliance: ['pdpl', 'saudi_moh', 'kyc'],
+      privacy: {
+        dataRetention: '30 days',
+        biometricData: 'processed by Stripe, not stored by BrainSAIT',
+        gdprCompliant: true
+      }
     },
-    trial: {
-      available: true,
-      duration: '14 days',
-      tier: 'professional',
-      signup: 'https://brainsait.com/trial'
+    instructions: language === 'ar' 
+      ? {
+          title: 'تعليمات التحقق من الهوية',
+          steps: [
+            'قم بإنشاء جلسة تحقق باستخدام /api/identity/verify',
+            'استخدم clientSecret لتهيئة Stripe.js في الواجهة الأمامية',
+            'أرسل المستخدم إلى رابط التحقق (url)',
+            'استمع لأحداث الويب هوك للتحديثات',
+            'تحقق من حالة الجلسة باستخدام /api/identity/verify/{sessionId}'
+          ]
+        }
+      : {
+          title: 'Identity Verification Instructions',
+          steps: [
+            'Create a verification session using /api/identity/verify',
+            'Use clientSecret to initialize Stripe.js in frontend',
+            'Redirect user to verification URL',
+            'Listen for webhook events for updates',
+            'Check session status using /api/identity/verify/{sessionId}'
+          ]
+        },
+    timestamp: new Date().toISOString()
+  })
+})
+
+// Update documentation endpoint to include Stripe endpoints
+app.get('/docs', (c) => {
+  const language = c.req.header('Accept-Language') || 'en'
+  const isArabic = language === 'ar'
+  
+  return c.json({
+    documentation: {
+      baseUrl: 'https://skill-folders-api.brainsait-fadil.workers.dev',
+      authentication: 'Bearer token required for /api/* endpoints (except /api/pricing, /api/identity/config)',
+      rateLimiting: 'Based on subscription tier',
+      endpoints: {
+        // Public endpoints
+        'GET /': 'Health check and service info (public)',
+        'GET /health': 'Service health status (public)',
+        'GET /docs': 'This documentation (public)',
+        'GET /api/pricing': 'Subscription tiers and pricing (public)',
+        'GET /api/identity/config': 'Stripe Identity client configuration (public)',
+        
+        // Skills endpoints (auth required)
+        'GET /api/skills': 'List all skills or filter by category (auth required)',
+        'GET /api/skills/:id': 'Get specific skill details (auth required)',
+        'GET /api/categories': 'List all skill categories (auth required)',
+        
+        // Stripe Identity endpoints (auth required except webhook)
+        'POST /api/identity/verify': 'Create identity verification session (auth required)',
+        'GET /api/identity/verify/:sessionId': 'Get verification session status (auth required)',
+        'POST /api/identity/validate/saudi-id': 'Validate Saudi ID/Iqama format (auth required)',
+        'POST /api/stripe/webhook': 'Stripe webhook endpoint (no auth, signature required)',
+        
+        // Coming soon
+        'POST /api/skills/:id/execute': 'Execute a skill (auth required, coming soon)'
+      },
+      headers: {
+        'Authorization': 'Bearer sk_your_api_key (required for /api/* except public endpoints)',
+        'Accept-Language': 'Optional: en or ar (default: en)',
+        'Stripe-Signature': 'Required for /api/stripe/webhook (Stpe webhook signature)'
+      },
+      tracing: {
+        enabled: true,
+        description: 'All requests include distributed tracing',
+        responseHeaders: {
+          'X-Trace-ID': 'Unique trace identifier for debugging',
+          'X-Request-Id': 'Same as X-Trace-ID for compatibility'
+        },
+        features: [
+          'Request/response timing',
+          'Span-based operation tracking',
+          'Error capture and propagation',
+          'Analytics Engine integration'
+        ]
+      },
+      stripeIdentity: {
+        enabled: true,
+        description: isArabic ? 'التحقق من الهوية باستخدام Stripe للمستخدمين السعوديين' : 'Identity verification using Stripe for Saudi users',
+        supportedDocuments: ['saudi_id_card', 'iqama', 'passport', 'driving_license'],
+        compliance: ['PDPL (Saudi Arabia)', 'KYC', 'Healthcare professional verification'],
+        webhookEvents: [
+          'identity.verification_session.verified',
+          'identity.verification_session.requires_input',
+          'identity.verification_session.canceled'
+        ],
+        saudiMarketFeatures: {
+          arabicLanguageSupport: true,
+          hijriDateSupport: true,
+          saudiIdValidation: true,
+          healthcareProfessionalFlow: true
+        }
+      },
+      responseFormat: 'JSON with standardized structure',
+      getApiKey: isArabic 
+        ? 'اتصل بـ sales@brainsait.com أو زر https://brainsait.com/api-keys'
+        : 'Contact sales@brainsait.com or visit https://brainsait.com/api-keys',
+      support: isArabic
+        ? 'الدعم الفني: support@brainsait.com أو +966 55 123 4567'
+        : 'Technical support: support@brainsait.com or +966 55 123 4567'
     }
   })
 })
 
 // Error handling
 app.onError((err, c) => {
-  console.error('Error:', err)
+  const tracer = c.get('tracer')
+  const rootSpan = c.get('rootSpan')
+  
+  if (tracer && rootSpan) {
+    tracer.setError(rootSpan, err)
+    tracer.endSpan(rootSpan, 'ERROR')
+  }
+  
+  console.error('Unhandled error:', err)
+  
   return c.json({
-    error: 'Internal server error',
-    message: err.message,
+    error: 'Internal Server Error',
+    message: 'Something went wrong',
+    traceId: tracer?.traceId,
     timestamp: new Date().toISOString()
   }, 500)
 })
 
 app.notFound((c) => {
   return c.json({
-    error: 'Not found',
+    error: 'Not Found',
     message: 'The requested endpoint does not exist',
+    availableEndpoints: [
+      '/', '/health', '/docs', 
+      '/api/pricing', '/api/identity/config',
+      '/api/skills', '/api/skills/:id', '/api/categories',
+      '/api/identity/verify', '/api/identity/verify/:sessionId',
+      '/api/identity/validate/saudi-id', '/api/stripe/webhook'
+    ],
     timestamp: new Date().toISOString()
   }, 404)
 })
