@@ -3,6 +3,7 @@ __pycache__/
 *.egg-info/
 .env
 .env.local
+.env.*.local
 .venv/
 venv/
 .DS_Store
@@ -11,3 +12,10 @@ venv/
 coverage/
 htmlcov/
 logs/
+
+# Cloudflare Workers / Wrangler
+.wrangler/
+wrangler-state.json
+dist/
+*.log
+node_modules/
