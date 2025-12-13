@@ -107,7 +107,7 @@ name = "skill-folders-api"
 account_id = "your-account-id-here"
 compatibility_date = "2025-12-12"
 compatibility_flags = ["nodejs_compat"]
-main = "dist/index.js"
+main = "src/index.js"
 workers_dev = true
 
 [env.production]
@@ -127,6 +127,8 @@ command = "npm run build"
 [observability]
 enabled = true
 ```
+
+> Tip: If you run `npx wrangler versions upload` from the repository root, a `wrangler.jsonc` file mirrors this configuration and points Wrangler to `skill-folders-repository/src/index.js`, preventing missing entry-point errors.
 
 **Important**: Replace `your-account-id-here` and `your-kv-namespace-id-here` with your actual values.
 
