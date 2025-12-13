@@ -2,7 +2,7 @@ name = "skill-folders-api"
 account_id = "d7b99530559ab4f2545e9bdc72a7ab9b"
 compatibility_date = "2025-12-12"
 compatibility_flags = ["nodejs_compat"]
-main = "src/index.js"
+main = "dist/index.js"
 workers_dev = true
 
 [vars]
