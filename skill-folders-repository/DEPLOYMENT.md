@@ -128,7 +128,7 @@ command = "npm run build"
 enabled = true
 ```
 
-> Tip: Run `npm run build` first, then `npx wrangler versions upload` from the repository root. The root `wrangler.jsonc` mirrors this configuration, uses `skill-folders-repository/dist/index.js` as the entry point, and avoids missing entry-point errors.
+> Tip: Run `npm run build` first, then `npx wrangler versions upload` from the repository root. The root `wrangler.jsonc` mirrors this configuration, uses `skill-folders-repository/dist/index.js` as the entry point, and avoids missing entry-point errors. The account ID is sourced from your authenticated Wrangler context or CLI arguments, so it is not duplicated in the root config.
 
 **Important**: Replace `your-account-id-here` and `your-kv-namespace-id-here` with your actual values.
 
