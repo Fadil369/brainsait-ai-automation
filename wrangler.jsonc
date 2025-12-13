@@ -1,0 +1,6 @@
+{
+  "name": "skill-folders-api",
+  "compatibility_date": "2025-12-12",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "skill-folders-repository/dist/index.js"
+}
